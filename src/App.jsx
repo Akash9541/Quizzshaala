@@ -86,7 +86,11 @@ export default function App() {
             <Signup />
           </PublicRoute>
         } />
-        
+        <Route path="/" element={
+          <PublicRoute>
+            <Front />
+          </PublicRoute>
+        } />
         {/* Protected Routes */}
         <Route path="/dashboard" element={
           <ProtectedRoute>
@@ -144,19 +148,19 @@ export default function App() {
           </ProtectedRoute>
         } />
         {/* Placements Page - This should be your main page */}
-        <Route path="/Company" element={
+        <Route path="/company" element={
           <ProtectedRoute>
             <CompanyQuestionsPage />
           </ProtectedRoute>
         } />
         {/* Placements Page - This should be your main page */}
-        <Route path="/Placements" element={
+        <Route path="/placements" element={
           <ProtectedRoute>
             <Placements />
           </ProtectedRoute>
         } />
         {/* Motivation page*/}
-        <Route path="/Motivation" element={
+        <Route path="/motivation" element={
           <ProtectedRoute>
             <Motivation />
           </ProtectedRoute>
