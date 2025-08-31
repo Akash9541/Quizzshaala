@@ -1,5 +1,4 @@
 import React, { useRef, useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { FaArrowLeft } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
@@ -29,7 +28,7 @@ const Motivation = () => {
       setIndex((prev) => (prev + 1) % quotes.length);
     }, 5000); // change quote every 5 seconds
     return () => clearInterval(interval);
-  }, []);
+  }, [quotes.length]);
 
   // Mouse tracking for background effect
   useEffect(() => {
@@ -164,47 +163,36 @@ const Motivation = () => {
         <span>Back</span>
       </button>
 
-      {/* Rotating Quotes */}
-      <div className="relative z-10 flex items-center justify-center min-h-screen p-6">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={index}
-            initial={{ opacity: 0, y: 50, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -50, scale: 0.9 }}
-            transition={{ duration: 1, ease: "easeOut" }}
-            className="max-w-4xl w-full text-center p-8 rounded-2xl bg-slate-800/30 backdrop-blur-md border border-slate-700/50 shadow-2xl"
-          >
-            <div className="mb-6">
-              <div className="inline-flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 rounded-full backdrop-blur-sm">
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                <span className="text-sm font-medium text-blue-200">Daily Motivation</span>
-              </div>
-            </div>
-            
-            <h1 className="text-4xl md:text-5xl font-bold mb-8 leading-tight bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent">
-              "{quotes[index]}"
-            </h1>
-            
-            <p className="text-xl text-slate-300 mb-8">
-              Keep pushing forward. Every step, no matter how small, brings you closer to your dreams.
-            </p>
-            
-            <div className="flex justify-center">
-              <button 
-                className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg transition-all duration-300 font-medium shadow-lg hover:shadow-xl"
-                onClick={() => navigate('/dashboard')}
-              >
-                <span>Continue Learning</span>
-              </button>
-            </div>
-            
-            <div className="mt-8 text-slate-400 text-sm">
-              <p>Quote {index + 1} of {quotes.length}</p>
-            </div>
-          </motion.div>
-        </AnimatePresence>
-      </div>
+     {/* Rotating Quotes */}
+<div className="relative z-10 flex flex-col items-center justify-center min-h-screen p-6">
+  <div className="mb-6">
+    <div className="inline-flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 rounded-full backdrop-blur-sm">
+      <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+      <span className="text-sm font-medium text-blue-200">Daily Motivation</span>
+    </div>
+  </div>
+  
+  <h1 className="text-4xl md:text-5xl font-bold mb-8 leading-tight bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent">
+    "{quotes[index]}"
+  </h1>
+  
+  <p className="text-xl text-slate-300 mb-8 text-center">
+    Keep pushing forward. Every step, no matter how small, brings you closer to your dreams.
+  </p>
+  
+  <div className="flex justify-center">
+    <button 
+      className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg transition-all duration-300 font-medium shadow-lg hover:shadow-xl"
+      onClick={() => navigate('/dashboard')}
+    >
+      <span>Continue Learning</span>
+    </button>
+  </div>
+  
+  <div className="mt-8 text-slate-400 text-sm">
+    <p>Quote {index + 1} of {quotes.length}</p>
+  </div>
+</div>
 
       <style jsx>{`
         @keyframes float {

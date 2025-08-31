@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaArrowLeft, FaLinkedin, FaGithub, FaTwitter, FaTrophy, FaAward, FaUniversity, FaMapMarkerAlt, FaCalendarAlt, FaChartBar, FaChartLine, FaChartPie, FaUserGraduate, FaMoneyBillWave, FaBuilding } from 'react-icons/fa';
 
 const Placements = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
-  const [selectedYear, setSelectedYear] = useState('2023');
-  const [stats, setStats] = useState({
+  // Removed unused selectedYear state
+  const [stats] = useState({
     totalPlacements: 1247,
     averagePackage: '28.5 LPA',
     highestPackage: '62 LPA',
@@ -90,7 +90,7 @@ const Placements = () => {
   ];
 
   // Function to render bar chart
-  const renderBarChart = (data, maxValue, color) => {
+  const renderBarChart = (data, maxValue) => {
     return (
       <div className="space-y-2 mt-4">
         {data.map((item, index) => (
@@ -389,14 +389,14 @@ const Placements = () => {
             {activeTab === 'companies' && (
               <div>
                 <h2 className="text-xl font-semibold text-white mb-4">Placements by Company</h2>
-                {renderBarChart(placementsData.byCompany, 235, 'from-blue-500 to-purple-600')}
+                {renderBarChart(placementsData.byCompany, 235)}
               </div>
             )}
 
             {activeTab === 'packages' && (
               <div>
                 <h2 className="text-xl font-semibold text-white mb-4">Package Distribution</h2>
-                {renderBarChart(placementsData.byPackage, 458, 'from-green-500 to-teal-600')}
+                {renderBarChart(placementsData.byPackage, 458)}
               </div>
             )}
 

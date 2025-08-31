@@ -3,11 +3,6 @@ import { FaTrophy, FaSync } from "react-icons/fa";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
 
-// Custom event to notify history page of updates
-export const notifyHistoryUpdate = () => {
-  window.dispatchEvent(new CustomEvent('historyShouldUpdate'));
-};
-
 const History = () => {
   const [history, setHistory] = useState([]);
   const [isLoading, setIsLoading] = useState(true);

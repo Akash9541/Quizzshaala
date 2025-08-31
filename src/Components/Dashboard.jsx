@@ -4,11 +4,6 @@ import { FaUser, FaSignOutAlt, FaTrophy, FaBookOpen, FaChartLine, FaPlay, FaHist
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
 
-// Custom event to notify history page of updates
-export const notifyHistoryUpdate = () => {
-  window.dispatchEvent(new CustomEvent('historyShouldUpdate'));
-};
-
 const Dashboard = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
@@ -215,7 +210,6 @@ const Dashboard = () => {
       
       if (response.ok) {
         // Notify the history page to refresh
-        notifyHistoryUpdate();
         
         // Refresh dashboard stats
         loadUserStats();

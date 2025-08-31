@@ -3,6 +3,8 @@ import { FaArrowLeft, FaCheckCircle, FaTimesCircle, FaTrophy, FaStar, FaRedo } f
 import { useNavigate } from 'react-router-dom';
 import confetti from 'canvas-confetti';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
+
 const questions = [
   {
     question: "What comes next in the sequence: 2, 4, 8, 16, ?",
@@ -51,65 +53,92 @@ const Logical = () => {
   const [maxStreak, setMaxStreak] = useState(0);
   const [userAnswers, setUserAnswers] = useState([]);
   const navigate = useNavigate();
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const feedbackRef = useRef(null);
 
-  useEffect(() => {
-    const handleMouseMove = (e) => {
-      setMousePosition({ x: e.clientX, y: e.clientY });
+useEffect(() => {
+  if (showFeedback && feedbackRef.current) {
+    feedbackRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}, [showFeedback]);
+
+// Always call useEffect at the top level
+useEffect(() => {
+  if (currentQuestion === questions.length) {
+    const saveHistory = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/history`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+          body: JSON.stringify({
+            quizTitle: "Logical Reasoning Quiz",
+            score,
+            totalQuestions: questions.length,
+            dateTaken: new Date(),
+          }),
+        });
+
+        if (response.ok) {
+          console.log("✅ Logical quiz history saved!");
+          // 🔥 Tell History.jsx to refresh
+          window.dispatchEvent(new Event("historyShouldUpdate"));
+        } else {
+          console.error("❌ Failed to save logical quiz history:", response.status);
+        }
+      } catch (err) {
+        console.error("❌ Error saving logical quiz history:", err);
+      }
     };
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, []);
 
-  useEffect(() => {
-    if (showFeedback && feedbackRef.current) {
-      feedbackRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }
-  }, [showFeedback]);
+    saveHistory();
+  }
+}, [currentQuestion, score]);
 
-  const handleOptionClick = (option) => {
-    if (showFeedback) return;
-    
-    const isAnswerCorrect = option === questions[currentQuestion].correct;
-    setIsCorrect(isAnswerCorrect);
-    setSelectedOption(option);
-    setShowFeedback(true);
-    
-    if (isAnswerCorrect) {
-      setScore(score + 1);
-      const newStreak = streak + 1;
-      setStreak(newStreak);
-      if (newStreak > maxStreak) setMaxStreak(newStreak);
-    } else {
-      setStreak(0);
-    }
-    
-    setUserAnswers([...userAnswers, {
-      question: questions[currentQuestion].question,
-      selected: option,
-      correct: questions[currentQuestion].correct
-    }]);
-  };
-
-  const handleNext = () => {
-    setSelectedOption('');
-    setShowFeedback(false);
-    setIsCorrect(null);
-    setCurrentQuestion(currentQuestion + 1);
-  };
-
-  const getScorePercentage = () => Math.round((score / questions.length) * 100);
+const handleOptionClick = (option) => {
+  if (showFeedback) return;
   
-  const triggerConfetti = () => {
-    confetti({
-      particleCount: 150,
-      spread: 70,
-      origin: { y: 0.6 }
-    });
-  };
+  const isAnswerCorrect = option === questions[currentQuestion].correct;
+  setIsCorrect(isAnswerCorrect);
+  setSelectedOption(option);
+  setShowFeedback(true);
+  
+  if (isAnswerCorrect) {
+    setScore(score + 1);
+    const newStreak = streak + 1;
+    setStreak(newStreak);
+    if (newStreak > maxStreak) setMaxStreak(newStreak);
+  } else {
+    setStreak(0);
+  }
+  
+  setUserAnswers([...userAnswers, {
+    question: questions[currentQuestion].question,
+    selected: option,
+    correct: questions[currentQuestion].correct
+  }]);
+};
 
-  if (currentQuestion >= questions.length) {
+const handleNext = () => {
+  setSelectedOption('');
+  setShowFeedback(false);
+  setIsCorrect(null);
+  setCurrentQuestion(currentQuestion + 1);
+};
+
+const getScorePercentage = () => Math.round((score / questions.length) * 100);
+
+const triggerConfetti = () => {
+  confetti({
+    particleCount: 150,
+    spread: 70,
+    origin: { y: 0.6 }
+  });
+};
+
+if (currentQuestion >= questions.length) {
+
     const percentage = getScorePercentage();
     if (percentage >= 80) {
       triggerConfetti();

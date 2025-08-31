@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaArrowLeft, FaTrophy, FaStar, FaFire, FaLightbulb, FaCheckCircle, FaTimesCircle, FaRocket, FaArrowRight, FaBook } from 'react-icons/fa';
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
 
 const questions = [
   {
@@ -47,20 +48,11 @@ const VerbalPage = () => {
   const [score, setScore] = useState(0);
   const [showFeedback, setShowFeedback] = useState(false);
   const [isCorrect, setIsCorrect] = useState(null);
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [particles, setParticles] = useState([]);
   const [timeElapsed, setTimeElapsed] = useState(0);
   const [questionStartTime, setQuestionStartTime] = useState(Date.now());
   const [answeredQuestions, setAnsweredQuestions] = useState([]);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const handleMouseMove = (e) => {
-      setMousePosition({ x: e.clientX, y: e.clientY });
-    };
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -180,9 +172,43 @@ const VerbalPage = () => {
     </div>
   );
 
-  if (currentQuestion >= questions.length) {
-    return (
-      <div className="min-h-screen relative overflow-hidden">
+useEffect(() => {
+  if (currentQuestion === questions.length) {
+    const saveHistory = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/history`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+          body: JSON.stringify({
+            quizTitle: "Quantitative Aptitude",
+            score,
+            totalQuestions: questions.length,
+            dateTaken: new Date(),
+          }),
+        });
+
+        if (response.ok) {
+          console.log("✅ Quantitative Aptitude history saved!");
+          // Tell History.jsx to refresh instantly
+          window.dispatchEvent(new Event("historyShouldUpdate"));
+        } else {
+          console.error("❌ Failed to save quantitative history:", response.status);
+        }
+      } catch (err) {
+        console.error("❌ Error saving quantitative history:", err);
+      }
+    };
+
+    saveHistory();
+  }
+}, [currentQuestion, score]);
+
+if (currentQuestion >= questions.length) {
+  return (
+    <div className="min-h-screen relative overflow-hidden">
         {/* Background */}
         <div className="fixed inset-0 bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800">
           <div className="absolute inset-0 bg-gradient-to-tr from-blue-900/10 via-transparent to-purple-900/10" />

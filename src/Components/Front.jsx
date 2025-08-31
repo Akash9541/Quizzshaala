@@ -1,6 +1,7 @@
-import React, { useRef, useState, useEffect, useCallback } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaLinkedin, FaGithub, FaTwitter, FaArrowRight, FaArrowLeft, FaRocket, FaBrain, FaCode, FaCalculator, FaComments, FaTrophy, FaBars, FaTimes, FaPlay, FaUsers, FaChartLine, FaStar, FaAward, FaGraduationCap, FaLaptopCode, FaClipboardCheck, FaBookOpen, FaFileAlt, FaUserCircle } from 'react-icons/fa';
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
 
 const Front = () => {
   const navigate = useNavigate();
@@ -14,30 +15,34 @@ const Front = () => {
     message: ''
   });
   const scrollRef = useRef(null);
-  let throttleTimeout = null;
+  const throttleTimeout = useRef(null);
 
-  useEffect(() => {
-    const fetchHistory = async () => {
-      try {
-        const res = await fetch('/api/history', {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-          }
-        });
-        const data = await res.json();
-        // setQuizHistory(data); // e.g., state variable
-      } catch (err) {
-        console.error(err);
-      }
-    };
-    fetchHistory();
-  }, []);
-  
-  const topicsRef = useRef(null);
+useEffect(() => {
+  const fetchHistory = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/history`, {
+      headers: {
+    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+        }
+      });
 
-  const scrollToTopics = () => {
-    topicsRef.current?.scrollIntoView({ behavior: "smooth" });
+      await res.json();
+      // setQuizHistory(data); // e.g., state variable
+    } catch (err) {
+      console.error(err);
+    }
   };
+
+  const handleHistoryUpdate = () => fetchHistory();
+  window.addEventListener("historyShouldUpdate", handleHistoryUpdate);
+
+  fetchHistory();
+
+  return () => {
+    window.removeEventListener("historyShouldUpdate", handleHistoryUpdate);
+  };
+}, []);
+  
 
   const topics = [
     { 
@@ -99,12 +104,6 @@ const Front = () => {
     { name: 'Contact', href: '#contact' }
   ];
 
-  const stats = [
-    { number: "75K+", label: "Active Learners", icon: <FaUsers /> },
-    { number: "98%", label: "Success Rate", icon: <FaChartLine /> },
-    { number: "800+", label: "Companies", icon: <FaRocket /> },
-    { number: "24/7", label: "Support", icon: <FaAward /> }
-  ];
 
   const features = [
     {
@@ -212,26 +211,27 @@ const Front = () => {
     const throttleDelay = 100; // ms
     
     const handleMouseMove = (e) => {
-      if (!throttleTimeout) {
-        throttleTimeout = setTimeout(() => {
+      if (!throttleTimeout.current) {
+        throttleTimeout.current = setTimeout(() => {
           setMousePosition({ x: e.clientX, y: e.clientY });
-          throttleTimeout = null;
+          throttleTimeout.current = null;
         }, throttleDelay);
       }
     };
 
     const handleScroll = () => {
-      setScrolled(window.scrollY > 50);
-      
-      const elements = document.querySelectorAll('[data-animate]');
-      elements.forEach((el) => {
-        const rect = el.getBoundingClientRect();
-        const isVisible = rect.top < window.innerHeight * 0.8;
-        const id = el.getAttribute('data-animate');
-        setIsVisible(prev => ({ ...prev, [id]: isVisible }));
-      });
-    };
+  setScrolled(window.scrollY > 50);
 
+  const elements = document.querySelectorAll("[data-animate]");
+  elements.forEach((el) => {
+    const rect = el.getBoundingClientRect();
+    const isVisibleNow = rect.top < window.innerHeight * 0.8;
+    const id = el.getAttribute("data-animate");
+    if (isVisibleNow) {
+      setIsVisible((prev) => ({ ...prev, [id]: true }));
+    }
+  });
+};
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('scroll', handleScroll);
     
@@ -240,8 +240,8 @@ const Front = () => {
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('scroll', handleScroll);
-      if (throttleTimeout) {
-        clearTimeout(throttleTimeout);
+      if (throttleTimeout.current) {
+        clearTimeout(throttleTimeout.current);
       }
     };
   }, []);
@@ -290,6 +290,36 @@ const Front = () => {
           0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 0.1; }
           50% { transform: translateY(-20px) rotate(180deg); opacity: 0.3; }
         }
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        @keyframes fadeInLeft {      
+          from {
+            opacity: 0;
+            transform: translateX(-30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+        @keyframes fadeInRight {
+          from {
+            opacity: 0;
+            transform: translateX(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
         .scrollbar-hide {
           -ms-overflow-style: none;
           scrollbar-width: none;
@@ -299,6 +329,23 @@ const Front = () => {
         }
         .animated-element {
           will-change: transform, opacity;
+        }
+        .animate-on-scroll {
+          opacity: 0;
+          transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+        .fade-in-up {
+          transform: translateY(30px);
+        }
+        .fade-in-left {
+          transform: translateX(-30px);
+        }
+        .fade-in-right {
+          transform: translateX(30px);
+        }
+        .is-visible {
+          opacity: 1;
+          transform: translate(0, 0);
         }
       `}</style>
 
@@ -325,7 +372,7 @@ const Front = () => {
 
             <nav className="hidden lg:block">
               <ul className="flex space-x-8">
-                {navItems.map((item, index) => (
+                {navItems.map((item) => (
                   <li key={item.name}>
                     <button
                       onClick={() => scrollToSection(item.href)}
@@ -396,48 +443,47 @@ const Front = () => {
 
         {/* Enhanced Hero Section */}
         <section
-            id="home"
-            className="flex flex-col items-center justify-center text-center px-4 py-20 min-h-screen"
+          id="home"
+          className="flex flex-col items-center justify-center text-center px-4 py-20 min-h-screen"
+        >
+          <div className="max-w-6xl mx-auto">
+            <div className="inline-flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 rounded-full mb-8 backdrop-blur-sm">
+              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+              <span className="text-sm font-medium text-blue-200">
+                Now Live - AI-Powered Learning Experience
+              </span>
+            </div>
+
+            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-8 leading-tight">
+              <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent block mb-4">
+                Master Your Career
+              </span>
+              <span className="text-white text-4xl md:text-5xl lg:text-6xl block">
+                with Smart Learning
+              </span>
+            </h1>
+
+            <p className="text-xl md:text-2xl text-slate-300 mb-12 max-w-3xl mx-auto leading-relaxed">
+              Transform your placement preparation with AI-powered quizzes,
+              personalized learning paths, and real-time performance analytics
+              designed for success.
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <button
+                className="flex items-center space-x-2 px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-lg transition-all duration-300 font-semibold shadow-xl hover:shadow-2xl transform hover:scale-105"
+                onClick={() =>
+                  document
+                    .getElementById("topics")
+                    ?.scrollIntoView({ behavior: "smooth" })
+                }
               >
-            <div className="max-w-6xl mx-auto">
-              <div className="inline-flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 rounded-full mb-8 backdrop-blur-sm">
-                 <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                     <span className="text-sm font-medium text-blue-200">
-                        Now Live - AI-Powered Learning Experience
-                      </span>
-                  </div>
-
-                    <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-8 leading-tight">
-                     <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent block mb-4">
-                       Master Your Career
-                    </span>
-                    <span className="text-white text-4xl md:text-5xl lg:text-6xl block">
-                   with Smart Learning
-                   </span>
-                  </h1>
-
-                     <p className="text-xl md:text-2xl text-slate-300 mb-12 max-w-3xl mx-auto leading-relaxed">
-                      Transform your placement preparation with AI-powered quizzes,
-                      personalized learning paths, and real-time performance analytics
-                      designed for success.
-                     </p>
-
-                     <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                       <button
-                          className="flex items-center space-x-2 px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-lg transition-all duration-300 font-semibold shadow-xl hover:shadow-2xl transform hover:scale-105"
-                         onClick={() =>
-                           document
-                              .getElementById("topics")
-                              ?.scrollIntoView({ behavior: "smooth" })
-                          }
-                        >
-                         <FaRocket className="w-5 h-5" />
-                         <span>Start Learning</span>
-                        </button>
-                      </div>
-                    </div>
-                  </section>
-
+                <FaRocket className="w-5 h-5" />
+                <span>Start Learning</span>
+              </button>
+            </div>
+          </div>
+        </section>
 
         {/* Enhanced Features Section */}
         <section id="features" className="px-4 py-20 relative" data-animate="features">
@@ -457,7 +503,8 @@ const Front = () => {
               {features.map((feature, index) => (
                 <div
                   key={index}
-                  className="group relative bg-slate-800/30 backdrop-blur-sm p-8 rounded-2xl border border-slate-700/50 hover:border-slate-600/50 transition-all duration-300 hover:scale-105"
+                  className={`group relative bg-slate-800/30 backdrop-blur-sm p-8 rounded-2xl border border-slate-700/50 hover:border-slate-600/50 transition-all duration-300 hover:scale-105 animate-on-scroll fade-in-up ${isVisible.features ? 'is-visible' : ''}`}
+                  style={{ transitionDelay: `${index * 100}ms` }}
                 >
                   <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${feature.color} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
                   
@@ -475,7 +522,13 @@ const Front = () => {
         </section>
 
         {/* Enhanced Topics Section */}
-        <section id="topics" className="px-4 py-20" data-animate="topics">
+        <section 
+          id="topics" 
+          data-animate="topics"
+          className={`relative bg-[#0f172a] py-24 overflow-hidden ${
+          isVisible.topics ? "is-visible" : ""
+          }`} >
+
           <div className="max-w-7xl mx-auto">
             
             <div className="text-center mb-16">
@@ -513,12 +566,16 @@ const Front = () => {
               }}
             >
               {topics.map((topic, index) => (
-                <div 
-                  key={index} 
-                  className="group min-w-[320px] cursor-pointer"
-                  onClick={() => handleTopicClick(topic.path)}
-                >
-                  <div className={`relative bg-gradient-to-br ${topic.gradient} p-8 rounded-2xl transition-all duration-500 hover:scale-105 shadow-xl hover:shadow-2xl border border-white/10`}>
+  <div 
+    key={index} 
+    className={`group min-w-[320px] cursor-pointer animate-on-scroll fade-in-left ${
+      isVisible.topics ? "is-visible" : ""
+    }`}
+    style={{ transitionDelay: `${index * 100}ms` }}
+    onClick={() => handleTopicClick(topic.path)}
+  >
+
+                  <div className={`relative bg-gradient-to-br ${topic.gradient} p-8 rounded-2xl transition-all duration-500 hover:scale-105 shadow-xl hover:shadow-2xl border border-white/10 ${isVisible.topics ? 'is-visible' : ''}`}>
                     
                     <div className="absolute inset-0 bg-black/20 rounded-2xl" />
                     <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl" />
@@ -566,7 +623,8 @@ const Front = () => {
               {testimonials.map((testimonial, index) => (
                 <div
                   key={index}
-                  className="group relative bg-slate-800/30 backdrop-blur-sm p-8 rounded-2xl border border-slate-700/50 hover:border-slate-600/50 transition-all duration-300 hover:scale-105"
+                  className={`group relative bg-slate-800/30 backdrop-blur-sm p-8 rounded-2xl border border-slate-700/50 hover:border-slate-600/50 transition-all duration-300 hover:scale-105 animate-on-scroll fade-in-up ${isVisible.testimonials ? 'is-visible' : ''}`}
+                  style={{ transitionDelay: `${index * 100}ms` }}
                 >
                   <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   
@@ -601,7 +659,7 @@ const Front = () => {
           <div className="relative max-w-6xl mx-auto">
             
             <div className="grid lg:grid-cols-2 gap-12 items-center">
-              <div>
+              <div className={`animate-on-scroll fade-in-left ${isVisible.about ? 'is-visible' : ''}`}>
                 <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
                   About Quizshaala
                 </h2>
@@ -628,7 +686,7 @@ const Front = () => {
                 </div>
               </div>
               
-              <div className="bg-slate-800/30 backdrop-blur-sm rounded-2xl p-8 border border-slate-700/50">
+              <div className={`bg-slate-800/30 backdrop-blur-sm rounded-2xl p-8 border border-slate-700/50 animate-on-scroll fade-in-right ${isVisible.about ? 'is-visible' : ''}`}>
                 <div className="grid grid-cols-2 gap-6">
                   {[
                     { number: '15K+', label: 'Questions', icon: '📚' },
@@ -649,138 +707,135 @@ const Front = () => {
         </section>
 
         {/* Services Section */}
-<section id="services" className="px-4 py-20" data-animate="services">
-  <div className="max-w-6xl mx-auto text-center">
-    
-    <h2 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-      Our Services
-    </h2>
-    <p className="text-xl text-slate-300 mb-16 max-w-2xl mx-auto">
-      Everything you need to excel in your placement journey
-    </p>
-    
-    <div className="grid md:grid-cols-2 lg:grid-cols-2 gap-8">
-      {[
-        { 
-          name: "Motivation", 
-          icon: "💡", 
-          description: "Daily quotes and success stories to keep you inspired.", 
-          path: "/Motivation"
-        },
-        { 
-          name: "Performance Analytics", 
-          icon: "📊", 
-          description: "Detailed progress tracking with actionable insights",
-          path: "/Dashboard"
-        },
-        { 
-          name: "Company Prep", 
-          icon: "🏢", 
-          description: "Company-specific preparation with latest patterns",
-          path: "/Company"
-        },
-        { 
-          name: "Resume Building", 
-          icon: "📄",
-          description: "Create a simple and professional resume.",
-          path: "/Resume"
-        },
-        { 
-        name: "Placement Records", 
-        icon: "🏆", 
-        description: "View our successful placement stories and records",
-        path: "/PlacementRecords"
-        }
-      ].map((service, index) => (
-        <div
-          key={index}
-          onClick={() => navigate (service.path)}
-          className="group relative bg-slate-800/30 backdrop-blur-sm p-8 rounded-2xl border border-slate-700/50 hover:border-slate-600/50 transition-all duration-300 hover:scale-105 cursor-pointer"
-        >
-          <div className="text-4xl mb-4 transform group-hover:scale-110 transition-transform duration-300">
-            {service.icon}
-          </div>
-          <h3 className="text-xl font-semibold text-white mb-3">{service.name}</h3>
-          <p className="text-slate-300 text-sm leading-relaxed">{service.description}</p>
-          
-          <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-        </div>
-      ))}
-    </div>
-  </div>
-</section>
-
-{/* Placement Records Section */}
-<section id="placement" className="px-4 py-20 relative" data-animate="placement">
-  <div className="max-w-6xl mx-auto">
-    <div className="text-center mb-16">
-      <h2 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-        Placement Records 🏆
-      </h2>
-      <p className="text-xl text-slate-300 max-w-2xl mx-auto">
-        Celebrating our students' success stories and achievements
-      </p>
-    </div>
-    
-    <div className="grid md:grid-cols-3 gap-8">
-      {[
-        { 
-          year: "2023", 
-          placements: "1200+", 
-          companies: "50+", 
-          highestPackage: "₹42 LPA",
-          description: "Exceptional year with record-breaking placements"
-        },
-        { 
-          year: "2022", 
-          placements: "950+", 
-          companies: "45+", 
-          highestPackage: "₹38 LPA",
-          description: "Consistent growth in placements and packages"
-        },
-        { 
-          year: "2021", 
-          placements: "800+", 
-          companies: "40+", 
-          highestPackage: "₹35 LPA",
-          description: "Strong recovery and placement performance"
-        }
-      ].map((record, index) => (
-        <div
-          key={index}
-          className="group relative bg-slate-800/30 backdrop-blur-sm p-8 rounded-2xl border border-slate-700/50 hover:border-slate-600/50 transition-all duration-300 hover:scale-105 cursor-pointer"
-          onClick={() => navigate('/Placement')}
-        >
-          <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-          
-          <div className="relative z-10 text-center">
-            <h3 className="text-3xl font-bold text-white mb-4">{record.year}</h3>
-            <div className="space-y-3">
-              <p className="text-2xl text-blue-400 font-semibold">{record.placements} Placements</p>
-              <p className="text-lg text-slate-300">{record.companies} Companies</p>
-              <p className="text-lg text-green-400">Highest: {record.highestPackage}</p>
-              <p className="text-sm text-slate-400 italic">{record.description}</p>
+        <section id="services" className="px-4 py-20" data-animate="services">
+          <div className="max-w-6xl mx-auto text-center">
+            
+            <h2 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+              Our Services
+            </h2>
+            <p className="text-xl text-slate-300 mb-16 max-w-2xl mx-auto">
+              Everything you need to excel in your placement journey
+            </p>
+            
+            <div className="grid md:grid-cols-2 lg:grid-cols-2 gap-8">
+              {[
+                { 
+                  name: "Motivation", 
+                  icon: "💡", 
+                  description: "Daily quotes and success stories to keep you inspired.", 
+                  path: "/Motivation"
+                },
+                { 
+                  name: "Performance Analytics", 
+                  icon: "📊", 
+                  description: "Detailed progress tracking with actionable insights",
+                  path: "/Dashboard"
+                },
+                { 
+                  name: "Company Prep", 
+                  icon: "🏢", 
+                  description: "Company-specific preparation with latest patterns",
+                  path: "/Company"
+                },
+                { 
+                  name: "Resume Building", 
+                  icon: "📄",
+                  description: "Create a simple and professional resume.",
+                  path: "/Resume"
+                },
+              ].map((service, index) => (
+                <div
+                  key={index}
+                  onClick={() => navigate (service.path)}
+                  className={`group relative bg-slate-800/30 backdrop-blur-sm p-8 rounded-2xl border border-slate-700/50 hover:border-slate-600/50 transition-all duration-300 hover:scale-105 cursor-pointer animate-on-scroll fade-in-up ${isVisible.services ? 'is-visible' : ''}`}
+                  style={{ transitionDelay: `${index * 100}ms` }}
+                >
+                  <div className="text-4xl mb-4 transform group-hover:scale-110 transition-transform duration-300">
+                    {service.icon}
+                  </div>
+                  <h3 className="text-xl font-semibold text-white mb-3">{service.name}</h3>
+                  <p className="text-slate-300 text-sm leading-relaxed">{service.description}</p>
+                  
+                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                </div>
+              ))}
             </div>
-            <div className="mt-6 flex justify-center">
-              <button className="px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg text-white font-medium hover:from-blue-700 hover:to-purple-700 transition-all duration-300">
-                View Details
+          </div>
+        </section>
+
+        {/* Placement Records Section */}
+        <section id="placement" className="px-4 py-20 relative" data-animate="placement">
+          <div className="max-w-6xl mx-auto">
+            <div className="text-center mb-16">
+              <h2 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                Placement Records 🏆
+              </h2>
+              <p className="text-xl text-slate-300 max-w-2xl mx-auto">
+                Celebrating our students' success stories and achievements
+              </p>
+            </div>
+            
+            <div className="grid md:grid-cols-3 gap-8">
+              {[
+                { 
+                  year: "2023", 
+                  placements: "1200+", 
+                  companies: "50+", 
+                  highestPackage: "₹42 LPA",
+                  description: "Exceptional year with record-breaking placements"
+                },
+                { 
+                  year: "2022", 
+                  placements: "950+", 
+                  companies: "45+", 
+                  highestPackage: "₹38 LPA",
+                  description: "Consistent growth in placements and packages"
+                },
+                { 
+                  year: "2021", 
+                  placements: "800+", 
+                  companies: "40+", 
+                  highestPackage: "₹35 LPA",
+                  description: "Strong recovery and placement performance"
+                }
+              ].map((record, index) => (
+                <div
+                  key={index}
+                  className={`group relative bg-slate-800/30 backdrop-blur-sm p-8 rounded-2xl border border-slate-700/50 hover:border-slate-600/50 transition-all duration-300 hover:scale-105 cursor-pointer animate-on-scroll fade-in-up ${isVisible.placement ? 'is-visible' : ''}`}
+                  style={{ transitionDelay: `${index * 100}ms` }}
+                  onClick={() => navigate('/Placement')}
+                >
+                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  
+                  <div className="relative z-10 text-center">
+                    <h3 className="text-3xl font-bold text-white mb-4">{record.year}</h3>
+                    <div className="space-y-3">
+                      <p className="text-2xl text-blue-400 font-semibold">{record.placements} Placements</p>
+                      <p className="text-lg text-slate-300">{record.companies} Companies</p>
+                      <p className="text-lg text-green-400">Highest: {record.highestPackage}</p>
+                      <p className="text-sm text-slate-400 italic">{record.description}</p>
+                    </div>
+                    <div className="mt-6 flex justify-center">
+                      <button className="px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg text-white font-medium hover:from-blue-700 hover:to-purple-700 transition-all duration-300">
+                        View Details
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            <div className="text-center mt-12">
+              <button 
+                onClick={() => navigate('/Placements')}
+                className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg text-lg font-semibold transition-all duration-300 transform hover:scale-105 shadow-xl"
+              >
+                Explore All Placement Records
               </button>
             </div>
           </div>
-        </div>
-      ))}
-    </div>
-    
-    <div className="text-center mt-12">
-      <button 
-        onClick={() => navigate('/Placements')}
-        className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg text-lg font-semibold transition-all duration-300 transform hover:scale-105 shadow-xl"
-      >
-        Explore All Placement Records
-      </button>
-    </div>
-  </div>
-</section>
+        </section>
+
         {/* Contact Section */}
         <section id="contact" className="px-4 py-20" data-animate="contact">
           <div className="max-w-4xl mx-auto">
@@ -792,7 +847,7 @@ const Front = () => {
               <p className="text-xl text-slate-300">Ready to start your learning journey?</p>
             </div>
             
-            <div className="bg-slate-800/30 backdrop-blur-sm rounded-2xl p-8 md:p-12 border border-slate-700/50">
+            <div className={`bg-slate-800/30 backdrop-blur-sm rounded-2xl p-8 md:p-12 border border-slate-700/50 animate-on-scroll fade-in-up ${isVisible.contact ? 'is-visible' : ''}`}>
               <form className="space-y-6" onSubmit={handleSubmit}>
                 <div className="grid md:grid-cols-2 gap-6">
                   <input 
@@ -842,7 +897,7 @@ const Front = () => {
             
             <div className="grid md:grid-cols-4 gap-8 text-center md:text-left mb-8">
               
-              <div>
+              <div className={`animate-on-scroll fade-in-left ${isVisible.contact ? 'is-visible' : ''}`}>
                 <div className="flex items-center justify-center md:justify-start space-x-3 mb-4">
                   <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center font-bold">
                     Q
@@ -856,7 +911,7 @@ const Front = () => {
                 </p>
               </div>
               
-              <div>
+              <div className={`animate-on-scroll fade-in-up ${isVisible.contact ? 'is-visible' : ''}`}>
                 <h4 className="text-lg font-semibold text-white mb-4">Quick Links</h4>
                 <ul className="space-y-2 text-slate-300">
                   {navItems.map((link) => (
@@ -872,7 +927,7 @@ const Front = () => {
                 </ul>
               </div>
               
-              <div>
+              <div className={`animate-on-scroll fade-in-up ${isVisible.contact ? 'is-visible' : ''}`}>
                 <h4 className="text-lg font-semibold text-white mb-4">Resources</h4>
                 <ul className="space-y-2 text-slate-300">
                   {['Documentation', 'Tutorials', 'Community', 'Support'].map((link) => (
@@ -885,7 +940,7 @@ const Front = () => {
                 </ul>
               </div>
               
-              <div>
+              <div className={`animate-on-scroll fade-in-right ${isVisible.contact ? 'is-visible' : ''}`}>
                 <h4 className="text-lg font-semibold text-white mb-4">Connect</h4>
                 <div className="flex justify-center md:justify-start space-x-4 text-2xl">
                   <a href="https://www.linkedin.com/in/akash-thakur-6354b9347" 

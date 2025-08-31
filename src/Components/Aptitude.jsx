@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FaArrowLeft, FaCalculator, FaTrophy, FaStar, FaFire, FaLightbulb, FaCheckCircle, FaTimesCircle, FaRocket, FaArrowRight } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
 
 const questions = [
   {
@@ -110,9 +111,45 @@ const AptitudeQuiz = () => {
     </div>
   );
 
-  if (currentQuestion >= questions.length) {
-    return (
-      <div className="min-h-screen relative overflow-hidden">
+useEffect(() => {
+  if (currentQuestion === questions.length) {
+    const saveHistory = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/history`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+          body: JSON.stringify({
+            quizTitle: "Quantitative Aptitude Quiz",
+            score,
+            totalQuestions: questions.length,
+            dateTaken: new Date(),
+          }),
+        });
+
+        if (response.ok) {
+          console.log("✅ Quiz history saved!");
+
+          // 🔥 Tell History.jsx to refresh
+          window.dispatchEvent(new Event("historyShouldUpdate"));
+        } else {
+          console.error("❌ Failed to save history:", response.status);
+        }
+      } catch (err) {
+        console.error("❌ Error saving history:", err);
+      }
+    };
+
+    saveHistory();
+  }
+}, [currentQuestion, score]);
+
+if (currentQuestion >= questions.length) {
+  return (
+    <div className="min-h-screen relative overflow-hidden">
+
         {/* Background */}
         <div className="fixed inset-0 bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800">
           <div className="absolute inset-0 bg-gradient-to-tr from-blue-900/10 via-transparent to-purple-900/10" />

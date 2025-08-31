@@ -29,7 +29,6 @@ const Login = () => {
       const { clientX: x, clientY: y } = e;
       if (bg) {
         const xPercent = (x / window.innerWidth) * 100;
-        const yPercent = (y / window.innerHeight) * 100;
 
         bg.style.background = `
           radial-gradient(circle at ${x}px ${y}px, rgba(6, 182, 212, 0.2), transparent 70%),

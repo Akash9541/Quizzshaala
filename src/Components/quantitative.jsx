@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaArrowLeft, FaTrophy, FaStar, FaFire, FaLightbulb, FaCheckCircle, FaTimesCircle, FaRocket, FaArrowRight } from "react-icons/fa";
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
+
 const questions = [
   {
     question: "If 5x – 3 = 2x + 9, what is the value of x?",
@@ -175,7 +177,42 @@ const QuantitativeAptitude = () => {
     </div>
   );
 
-  if (currentQuestion >= questions.length) {
+useEffect(() => {
+  if (currentQuestion === questions.length) {
+    const saveHistory = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/history`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+          body: JSON.stringify({
+            quizTitle: "Quantitative Aptitude",
+            score,
+            totalQuestions: questions.length,
+            dateTaken: new Date(),
+          }),
+        });
+
+        if (response.ok) {
+          console.log("✅ Quantitative Aptitude history saved!");
+          // 👉 auto-refresh History.jsx
+          window.dispatchEvent(new Event("historyShouldUpdate"));
+        } else {
+          console.error("❌ Failed to save quantitative history:", response.status);
+        }
+      } catch (err) {
+        console.error("❌ Error saving quantitative history:", err);
+      }
+    };
+
+    saveHistory();
+  }
+}, [currentQuestion, score]);
+
+if (currentQuestion >= questions.length) {
+
     return (
       <div className="min-h-screen relative overflow-hidden">
         {/* Background */}

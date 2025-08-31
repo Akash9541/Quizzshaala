@@ -35,7 +35,6 @@ const Signup = () => {
   // OTP state
   const [step, setStep] = useState('signup'); // 'signup' or 'verify'
   const [otp, setOtp] = useState('');
-  const [userId, setUserId] = useState('');
   const [otpSuccess, setOtpSuccess] = useState('');
 
 
@@ -45,7 +44,6 @@ const Signup = () => {
       const { clientX: x, clientY: y } = e;
       if (bg) {
         const xPercent = (x / window.innerWidth) * 100;
-        const yPercent = (y / window.innerHeight) * 100;
 
         bg.style.background = `
           radial-gradient(circle at ${x}px ${y}px, rgba(6, 182, 212, 0.2), transparent 70%),
@@ -215,7 +213,6 @@ const handleSignup = async (e) => {
     if (!response.ok) {
       // If backend says email exists but is unverified
       if (data.error === 'Email already exists but not verified') {
-        setUserId(data.userId);
         setStep('verify');
         setOtpSuccess('OTP has been sent again to your email for verification.');
         return;
@@ -224,10 +221,8 @@ const handleSignup = async (e) => {
     }
 
     // ✅ For successful signup of a new user
-    setUserId(data.userId || ''); // optional
     setStep('verify');
     setOtpSuccess('OTP has been sent to your email for verification.');
-
   } catch (err) {
     console.error('Signup error:', err);
     setError(err.message || 'Signup failed. Please try again.');

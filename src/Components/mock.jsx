@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaArrowLeft, FaTrophy, FaStar, FaFire, FaLightbulb, FaCheckCircle, FaTimesCircle, FaRocket, FaArrowRight } from "react-icons/fa";
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
+
 const mockQuestions = [
   {
     question: "Which data structure uses LIFO?",
@@ -185,79 +187,113 @@ const MockTests = () => {
     </div>
   );
 
-  if (currentQuestion >= mockQuestions.length) {
-    return (
-      <div className="min-h-screen relative overflow-hidden">
-        {/* Background */}
-        <div className="fixed inset-0 bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800">
-          <div className="absolute inset-0 bg-gradient-to-tr from-blue-900/10 via-transparent to-purple-900/10" />
-          <div className="absolute inset-0 bg-gradient-to-bl from-indigo-900/5 via-transparent to-cyan-900/5" />
-        </div>
+useEffect(() => {
+  if (currentQuestion === mockQuestions.length) {
+    const saveHistory = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/history`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+          body: JSON.stringify({
+            quizTitle: "Mock Test",
+            score,
+            totalQuestions: mockQuestions.length,
+            dateTaken: new Date(),
+          }),
+        });
 
-        <div className="relative z-10 min-h-screen flex items-center justify-center p-6">
-          <div className="max-w-2xl mx-auto text-center">
-            <div className="bg-slate-800/30 backdrop-blur-md rounded-3xl p-12 border border-slate-700/50 shadow-2xl">
-              <div className="text-8xl mb-8 animate-bounce">
-                {getScoreEmoji()}
-              </div>
-              
-              <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-cyan-300 to-purple-400 bg-clip-text text-transparent">
-                Mock Test Completed! ✨
-              </h1>
-              
-              <div className="mb-8">
-                <div className="text-6xl font-bold text-white mb-2">{score}/{mockQuestions.length}</div>
-                <div className="text-2xl text-gray-300 mb-4">
-                  Score: <span className="text-cyan-400 font-semibold">{getScorePercentage()}%</span>
-                </div>
-              </div>
+        if (response.ok) {
+          console.log("✅ Mock Test history saved!");
+          // 🔥 Tell History.jsx to refresh instantly
+          window.dispatchEvent(new Event("historyShouldUpdate"));
+        } else {
+          console.error("❌ Failed to save mock test history:", response.status);
+        }
+      } catch (err) {
+        console.error("❌ Error saving mock test history:", err);
+      }
+    };
 
-              <div className="grid grid-cols-3 gap-4 mb-8">
-                <div className="bg-gradient-to-br from-green-500/20 to-emerald-600/20 rounded-xl p-4 border border-green-500/30">
-                  <FaCheckCircle className="text-green-400 text-2xl mx-auto mb-2" />
-                  <div className="text-lg font-semibold text-white">{score}</div>
-                  <div className="text-sm text-gray-300">Correct</div>
-                </div>
-                <div className="bg-gradient-to-br from-red-500/20 to-pink-600/20 rounded-xl p-4 border border-red-500/30">
-                  <FaTimesCircle className="text-red-400 text-2xl mx-auto mb-2" />
-                  <div className="text-lg font-semibold text-white">{mockQuestions.length - score}</div>
-                  <div className="text-sm text-gray-300">Wrong</div>
-                </div>
-                <div className="bg-gradient-to-br from-purple-500/20 to-indigo-600/20 rounded-xl p-4 border border-purple-500/30">
-                  <FaTrophy className="text-purple-400 text-2xl mx-auto mb-2" />
-                  <div className="text-lg font-semibold text-white">{getScorePercentage()}%</div>
-                  <div className="text-sm text-gray-300">Grade</div>
-                </div>
-              </div>
+    saveHistory();
+  }
+}, [currentQuestion, score]);
 
-              <div className="space-y-4">
-                <button 
-                  onClick={() => {
-                    setCurrentQuestion(0);
-                    setScore(0);
-                    setSelectedOption('');
-                    setShowFeedback(false);
-                    setIsCorrect(null);
-                    setAnsweredQuestions([]);
-                    setQuestionStartTime(Date.now());
-                  }}
-                  className="w-full px-8 py-4 bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-purple-600 hover:to-cyan-500 text-white rounded-full text-lg font-semibold transition-all duration-300 transform hover:scale-105 shadow-xl"
-                >
-                  <FaRocket className="inline mr-2" /> Try Again
-                </button>
-                <button 
-                  onClick={() => navigate('/')}
-                  className="w-full px-8 py-4 bg-white/10 backdrop-blur-md hover:bg-white/20 text-white rounded-full text-lg font-semibold transition-all duration-300 border border-white/20 hover:border-white/40"
-                >
-                  <FaArrowLeft className="inline mr-2" /> Back to Home
-                </button>
+if (currentQuestion >= mockQuestions.length) {
+  return (
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Background */}
+      <div className="fixed inset-0 bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800">
+        <div className="absolute inset-0 bg-gradient-to-tr from-blue-900/10 via-transparent to-purple-900/10" />
+        <div className="absolute inset-0 bg-gradient-to-bl from-indigo-900/5 via-transparent to-cyan-900/5" />
+      </div>
+
+      <div className="relative z-10 min-h-screen flex items-center justify-center p-6">
+        <div className="max-w-2xl mx-auto text-center">
+          <div className="bg-slate-800/30 backdrop-blur-md rounded-3xl p-12 border border-slate-700/50 shadow-2xl">
+            <div className="text-8xl mb-8 animate-bounce">
+              {getScoreEmoji()}
+            </div>
+            
+            <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-cyan-300 to-purple-400 bg-clip-text text-transparent">
+              Mock Test Completed! ✨
+            </h1>
+            
+            <div className="mb-8">
+              <div className="text-6xl font-bold text-white mb-2">{score}/{mockQuestions.length}</div>
+              <div className="text-2xl text-gray-300 mb-4">
+                Score: <span className="text-cyan-400 font-semibold">{getScorePercentage()}%</span>
               </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4 mb-8">
+              <div className="bg-gradient-to-br from-green-500/20 to-emerald-600/20 rounded-xl p-4 border border-green-500/30">
+                <FaCheckCircle className="text-green-400 text-2xl mx-auto mb-2" />
+                <div className="text-lg font-semibold text-white">{score}</div>
+                <div className="text-sm text-gray-300">Correct</div>
+              </div>
+              <div className="bg-gradient-to-br from-red-500/20 to-pink-600/20 rounded-xl p-4 border border-red-500/30">
+                <FaTimesCircle className="text-red-400 text-2xl mx-auto mb-2" />
+                <div className="text-lg font-semibold text-white">{mockQuestions.length - score}</div>
+                <div className="text-sm text-gray-300">Wrong</div>
+              </div>
+              <div className="bg-gradient-to-br from-purple-500/20 to-indigo-600/20 rounded-xl p-4 border border-purple-500/30">
+                <FaTrophy className="text-purple-400 text-2xl mx-auto mb-2" />
+                <div className="text-lg font-semibold text-white">{getScorePercentage()}%</div>
+                <div className="text-sm text-gray-300">Grade</div>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <button 
+                onClick={() => {
+                  setCurrentQuestion(0);
+                  setScore(0);
+                  setSelectedOption('');
+                  setShowFeedback(false);
+                  setIsCorrect(null);
+                  setAnsweredQuestions([]);
+                  setQuestionStartTime(Date.now());
+                }}
+                className="w-full px-8 py-4 bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-purple-600 hover:to-cyan-500 text-white rounded-full text-lg font-semibold transition-all duration-300 transform hover:scale-105 shadow-xl"
+              >
+                <FaRocket className="inline mr-2" /> Try Again
+              </button>
+              <button 
+                onClick={() => navigate('/')}
+                className="w-full px-8 py-4 bg-white/10 backdrop-blur-md hover:bg-white/20 text-white rounded-full text-lg font-semibold transition-all duration-300 border border-white/20 hover:border-white/40"
+              >
+                <FaArrowLeft className="inline mr-2" /> Back to Home
+              </button>
             </div>
           </div>
         </div>
       </div>
-    );
-  }
+    </div>
+  );
+}
 
   return (
     <div className="min-h-screen relative overflow-hidden">
