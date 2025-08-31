@@ -48,7 +48,7 @@ const Login = () => {
   useEffect(() => {
     const token = localStorage.getItem('accessToken');
     if (token) {
-      navigate('/dashboard');
+      navigate('/front');
     }
   }, [navigate]);
 

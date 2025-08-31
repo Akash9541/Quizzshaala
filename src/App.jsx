@@ -1,5 +1,7 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useState, useEffect } from "react";
+
+// Import all your components
 import Front from "./Components/Front";
 import Coding from "./Components/dsa";
 import Login from "./Components/Login";
@@ -12,21 +14,19 @@ import Dashboard from "./Components/Dashboard";
 import History from "./Components/History";
 import Signup from "./Components/signup";
 import Resume from "./Components/Resume"; 
-import Placements from "./Components/Placements";// Import the Resume component
+import Placements from "./Components/Placements";
 import Motivation from "./Components/Motivation";
 import CompanyQuestionsPage from "./Components/Company";
 
+// ================================
 // Protected Route Component
+// ================================
 const ProtectedRoute = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(null);
 
   useEffect(() => {
-    const checkAuth = () => {
-      const token = localStorage.getItem('accessToken');
-      setIsAuthenticated(!!token);
-    };
-
-    checkAuth();
+    const token = localStorage.getItem("accessToken");
+    setIsAuthenticated(!!token);
   }, []);
 
   if (isAuthenticated === null) {
@@ -43,17 +43,15 @@ const ProtectedRoute = ({ children }) => {
   return isAuthenticated ? children : <Navigate to="/login" replace />;
 };
 
-// Public Route Component (redirect to dashboard if already logged in)
+// ================================
+// Public Route Component
+// ================================
 const PublicRoute = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(null);
 
   useEffect(() => {
-    const checkAuth = () => {
-      const token = localStorage.getItem('accessToken');
-      setIsAuthenticated(!!token);
-    };
-
-    checkAuth();
+    const token = localStorage.getItem("accessToken");
+    setIsAuthenticated(!!token);
   }, []);
 
   if (isAuthenticated === null) {
@@ -67,114 +65,163 @@ const PublicRoute = ({ children }) => {
     );
   }
 
-  return !isAuthenticated ? children : <Navigate to="/dashboard" replace />;
+  return !isAuthenticated ? children : <Navigate to="/front" replace />;
 };
 
+// ================================
+// Main App Component
+// ================================
 export default function App() {
   return (
-    <>
-      <Routes>
-        {/* Public Routes */}
-        <Route path="/login" element={
+    <Routes>
+      {/* ===================== PUBLIC ROUTES ===================== */}
+      <Route
+        path="/login"
+        element={
           <PublicRoute>
             <Login />
           </PublicRoute>
-        } />
-        
-        <Route path="/signup" element={
+        }
+      />
+      <Route
+        path="/signup"
+        element={
           <PublicRoute>
             <Signup />
           </PublicRoute>
-        } />
-        <Route path="/" element={
+        }
+      />
+      <Route
+        path="/"
+        element={
           <PublicRoute>
             <Front />
           </PublicRoute>
-        } />
-        {/* Protected Routes */}
-        <Route path="/dashboard" element={
+        }
+      />
+
+      {/* ===================== PROTECTED ROUTES ===================== */}
+      <Route
+        path="/dashboard"
+        element={
           <ProtectedRoute>
             <Dashboard />
           </ProtectedRoute>
-        } />
+        }
+      />
 
-        <Route path="/front" element={
+      <Route
+        path="/front"
+        element={
           <ProtectedRoute>
             <Front />
           </ProtectedRoute>
-        } />
+        }
+      />
 
-        {/* Topic Pages */}
-        <Route path="/coding" element={
+      {/* Topic Pages */}
+      <Route
+        path="/coding"
+        element={
           <ProtectedRoute>
             <Coding />
           </ProtectedRoute>
-        } />
-        <Route path="/logical" element={
+        }
+      />
+      <Route
+        path="/logical"
+        element={
           <ProtectedRoute>
             <Logical />
           </ProtectedRoute>
-        } />
-        <Route path="/aptitude" element={
+        }
+      />
+      <Route
+        path="/aptitude"
+        element={
           <ProtectedRoute>
             <Aptitude />
           </ProtectedRoute>
-        } />
-        <Route path="/csfundamentals" element={
+        }
+      />
+      <Route
+        path="/csfundamentals"
+        element={
           <ProtectedRoute>
             <CS />
           </ProtectedRoute>
-        } />
-        <Route path="/verbal" element={
+        }
+      />
+      <Route
+        path="/verbal"
+        element={
           <ProtectedRoute>
             <Verbal />
           </ProtectedRoute>
-        } />
-        <Route path="/mock" element={
+        }
+      />
+      <Route
+        path="/mock"
+        element={
           <ProtectedRoute>
             <Mock />
           </ProtectedRoute>
-        } />
-        <Route path="/history" element={
+        }
+      />
+      <Route
+        path="/history"
+        element={
           <ProtectedRoute>
             <History />
           </ProtectedRoute>
-        } />
-        
-        {/* Resume Page */}
-        <Route path="/resume" element={
+        }
+      />
+
+      {/* Resume / Placements */}
+      <Route
+        path="/resume"
+        element={
           <ProtectedRoute>
             <Resume />
           </ProtectedRoute>
-        } />
-        {/* Placements Page - This should be your main page */}
-        <Route path="/company" element={
-          <ProtectedRoute>
-            <CompanyQuestionsPage />
-          </ProtectedRoute>
-        } />
-        {/* Placements Page - This should be your main page */}
-        <Route path="/placements" element={
+        }
+      />
+      <Route
+        path="/placements"
+        element={
           <ProtectedRoute>
             <Placements />
           </ProtectedRoute>
-        } />
-        {/* Motivation page*/}
-        <Route path="/motivation" element={
+        }
+      />
+      <Route
+        path="/company"
+        element={
+          <ProtectedRoute>
+            <CompanyQuestionsPage />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Motivation */}
+      <Route
+        path="/motivation"
+        element={
           <ProtectedRoute>
             <Motivation />
           </ProtectedRoute>
-        } 
-        />
-        
+        }
+      />
 
-        {/* 404 Route */}
-        <Route path="*" element={
+      {/* ===================== 404 ROUTE ===================== */}
+      <Route
+        path="*"
+        element={
           <div className="min-h-screen bg-slate-900 flex items-center justify-center">
             <div className="text-center">
               <h1 className="text-4xl font-bold text-white mb-4">404</h1>
               <p className="text-gray-400">Page not found</p>
-              <button 
+              <button
                 onClick={() => window.history.back()}
                 className="mt-4 px-6 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg transition-colors"
               >
@@ -182,8 +229,8 @@ export default function App() {
               </button>
             </div>
           </div>
-        } />
-      </Routes>
-    </>
+        }
+      />
+    </Routes>
   );
 }
