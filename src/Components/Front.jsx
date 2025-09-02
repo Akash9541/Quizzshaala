@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaLinkedin, FaGithub, FaTwitter, FaArrowRight, FaArrowLeft, FaRocket, FaBrain, FaCode, FaCalculator, FaComments, FaTrophy, FaBars, FaTimes, FaPlay, FaUsers, FaChartLine, FaStar, FaAward, FaGraduationCap, FaLaptopCode, FaClipboardCheck, FaBookOpen, FaFileAlt, FaUserCircle } from 'react-icons/fa';
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "https://quizshaala.onrender.com";
 
 const Front = () => {
   const navigate = useNavigate();

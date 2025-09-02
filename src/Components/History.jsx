@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { FaTrophy, FaSync } from "react-icons/fa";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "https://quizshaala.onrender.com";
 
 const History = () => {
   const [history, setHistory] = useState([]);
