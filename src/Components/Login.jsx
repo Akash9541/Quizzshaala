@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { FaUser, FaLock, FaRocket, FaGoogle, FaGithub, FaEye, FaEyeSlash } from 'react-icons/fa';
 
 // Correct backend URL
-const API_BASE_URL = 'https://quizshaala.onrender.com/api';
+const API_BASE_URL = 'https://localhost:3000/api';
 
 const Login = () => {
   const navigate = useNavigate();
