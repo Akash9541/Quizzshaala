@@ -187,50 +187,51 @@ const Signup = () => {
     return true;
   };
 
-const handleSignup = async (e) => {
-  e.preventDefault();
-  
-  if (!validateForm()) return;
-  
-  setIsLoading(true);
-  setError('');
-  setSuccess('');
+  const handleSignup = async (e) => {
+    e.preventDefault();
+    
+    if (!validateForm()) return;
+    
+    setIsLoading(true);
+    setError('');
+    setSuccess('');
 
-  try {
-    const response = await fetch(`${API_BASE_URL}/signup`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        name: formData.name.trim(),
-        email: formData.email.toLowerCase(),
-        password: formData.password
-      })
-    });
+    try {
+      const response = await fetch(`${API_BASE_URL}/signup`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          name: formData.name.trim(),
+          email: formData.email.toLowerCase(),
+          password: formData.password
+        })
+      });
 
-    const data = await response.json();
+      const data = await response.json();
 
-    if (!response.ok) {
-      // If backend says email exists but is unverified
-      if (data.error === 'Email already exists but not verified') {
-        setStep('verify');
-        setOtpSuccess('OTP has been sent again to your email for verification.');
-        return;
+      if (!response.ok) {
+        // If backend says email exists but is unverified
+        if (response.status === 200 && data.message && data.message.includes('already exists but not verified')) {
+          setStep('verify');
+          setOtpSuccess(data.message);
+          return;
+        }
+        throw new Error(data.error || 'Signup failed');
       }
-      throw new Error(data.error || 'Signup failed');
-    }
 
-    // ✅ For successful signup of a new user
-    setStep('verify');
-    setOtpSuccess('OTP has been sent to your email for verification.');
-  } catch (err) {
-    console.error('Signup error:', err);
-    setError(err.message || 'Signup failed. Please try again.');
-  } finally {
-    setIsLoading(false);
-  }
-};
+      // For successful signup of a new user
+      setStep('verify');
+      setOtpSuccess(data.message || 'OTP has been sent to your email for verification.');
+    } catch (err) {
+      console.error('Signup error:', err);
+      setError(err.message || 'Signup failed. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleVerifyOtp = async (e) => {
     e.preventDefault();
@@ -250,6 +251,7 @@ const handleSignup = async (e) => {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({
           email: formData.email.toLowerCase(),
           otp: otp
@@ -269,7 +271,7 @@ const handleSignup = async (e) => {
       setOtpSuccess('Account created successfully! Redirecting...');
       
       setTimeout(() => {
-        navigate('/Front');
+        navigate('/front');
       }, 2000);
       
     } catch (err) {
@@ -291,6 +293,7 @@ const handleSignup = async (e) => {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({
           email: formData.email.toLowerCase()
         })

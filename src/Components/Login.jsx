@@ -2,8 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaUser, FaLock, FaRocket, FaGoogle, FaGithub, FaEye, FaEyeSlash } from 'react-icons/fa';
 
-// Correct backend URL
-const API_BASE_URL = 'https://localhost:3000/api';
+// Correct backend URL - make sure this matches your deployed backend
+const API_BASE_URL = 'https://quizshaala.onrender.com/api';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -101,6 +101,7 @@ const Login = () => {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // Important for cookies/sessions
         body: JSON.stringify({
           email: formData.email,
           password: formData.password
@@ -137,6 +138,8 @@ const Login = () => {
         setError('Account temporarily locked due to multiple failed attempts. Please try again later.');
       } else if (err.message.includes('Invalid email or password')) {
         setError('Invalid email or password. Please check your credentials.');
+      } else if (err.message.includes('verify your email')) {
+        setError('Please verify your email before logging in. Check your inbox for the verification OTP.');
       }
     } finally {
       setIsLoading(false);
