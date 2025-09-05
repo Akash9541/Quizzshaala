@@ -36,7 +36,7 @@ To run locally:
 git clone https://github.com/Akash9541/quizzshaala.git
 
 # Go into project folder
-cd quizzshaala
+cd SD_PROJECT
 
 # Install dependencies
 npm install
