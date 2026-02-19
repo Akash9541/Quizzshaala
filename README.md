@@ -1,13 +1,45 @@
-# React + Vite
+# 🎓 Quizzshaala
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Quizzshaala is an interactive **Quiz Platform for Placement Preparation**, built using **React.js, Tailwind CSS, Node.js & MongoDB**.  
+It provides topic-wise quizzes, mock tests, leaderboards, and company-specific interview preparation.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🚀 Live Demo
+🔗 [Visit Quizzshaala](https://quizzshaala.onrender.com)
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
-# Quizzshaala
+## ✨ Features
+- 🔐 **User Authentication** – Login & Signup functionality  
+- 📝 **Quizzes by Topics** – Aptitude, Logical Reasoning, Verbal Ability, DSA, CS Fundamentals  
+- 🏢 **Mock Tests** – Company-specific questions (TCS, Infosys, Wipro, etc.)  
+- 🎮 **Interactive UI** – Animated backgrounds, feedback on answers, score tracking  
+- 📊 **Leaderboard & Results** – Track performance in real-time  
+- 🌙 **Dark Theme** with Tailwind CSS styling  
+
+---
+
+## 🛠️ Tech Stack
+- **Frontend:** React.js, Vite, Tailwind CSS  
+- **Backend:** Node.js, Express.js  
+- **Database:** MongoDB  
+- **Deployment:** Render (Frontend + Backend)  
+
+---
+
+## ⚙️ Installation & Setup
+To run locally:
+
+```bash
+# Clone repo
+git clone https://github.com/Akash9541/quizzshaala.git
+
+# Go into project folder
+cd SD_PROJECT
+
+# Install dependencies
+npm install
+
+# Run development server
+npm run dev
