@@ -20,7 +20,9 @@ const Front = () => {
   useEffect(() => {
     const fetchHistory = async () => {
       try {
-        await api.get('/history');
+        const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
+        if (!token) return;
+        await api.get('/history', token);
       } catch (err) {
         console.error(err);
       }
