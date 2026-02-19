@@ -1,4 +1,20 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
+const getApiBaseUrl = () => {
+    if (import.meta.env.VITE_API_URL) {
+        return import.meta.env.VITE_API_URL;
+    }
+
+    if (typeof window !== 'undefined') {
+        const host = window.location.hostname;
+        const isLocalHost = host === 'localhost' || host === '127.0.0.1';
+        if (!isLocalHost) {
+            return "https://quizshaala.onrender.com/api";
+        }
+    }
+
+    return "http://localhost:5001/api";
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 const resolveToken = (token) => {
     if (token) return token;
