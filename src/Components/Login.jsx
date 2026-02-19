@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { FaUser, FaLock, FaRocket, FaGoogle, FaGithub, FaEye, FaEyeSlash } from 'react-icons/fa';
 
 // Correct backend URL - make sure this matches your deployed backend
-const API_BASE_URL = 'https://quizshaala.onrender.com/api';
+import { api } from '../services/api';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -13,7 +13,7 @@ const Login = () => {
     email: '',
     password: ''
   });
-  
+
   const [isFocused, setIsFocused] = useState({
     email: false,
     password: false
@@ -89,34 +89,21 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
-    
+
     setIsLoading(true);
     setError('');
 
     try {
-      const response = await fetch(`${API_BASE_URL}/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include', // Important for cookies/sessions
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password
-        })
+      const data = await api.post('/login', {
+        email: formData.email,
+        password: formData.password
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Login failed');
-      }
 
       // Store tokens
       localStorage.setItem('accessToken', data.accessToken);
-      
+
       if (rememberMe) {
         localStorage.setItem('refreshToken', data.refreshToken);
       } else {
@@ -128,17 +115,28 @@ const Login = () => {
 
       // Navigate to dashboard
       navigate('/front');
-      
+
     } catch (err) {
       console.error('Login error:', err);
-      setError(err.message || 'Login failed. Please try again.');
-      
+      // Construct a meaningful error message
+      let errorMessage = err.message || 'Login failed. Please try again.';
+
+      try {
+        // Attempt to parse if it's a JSON string, though api.js usually returns object or throws error with message
+        const parsed = JSON.parse(errorMessage);
+        if (parsed && parsed.error) errorMessage = parsed.error;
+      } catch (e) {
+        // Not a JSON string, keep original message
+      }
+
+      setError(errorMessage);
+
       // Handle specific error cases
-      if (err.message.includes('locked')) {
+      if (errorMessage.includes('locked')) {
         setError('Account temporarily locked due to multiple failed attempts. Please try again later.');
-      } else if (err.message.includes('Invalid email or password')) {
+      } else if (errorMessage.includes('Invalid email or password')) {
         setError('Invalid email or password. Please check your credentials.');
-      } else if (err.message.includes('verify your email')) {
+      } else if (errorMessage.includes('verify your email')) {
         setError('Please verify your email before logging in. Check your inbox for the verification OTP.');
       }
     } finally {
@@ -180,9 +178,8 @@ const Login = () => {
         <form className="space-y-6" onSubmit={handleSubmit}>
           {/* Email Input */}
           <div className="relative">
-            <div className={`absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none transition-colors ${
-              isFocused.email ? 'text-cyan-400' : 'text-gray-500'
-            }`}>
+            <div className={`absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none transition-colors ${isFocused.email ? 'text-cyan-400' : 'text-gray-500'
+              }`}>
               <FaUser />
             </div>
             <input
@@ -201,9 +198,8 @@ const Login = () => {
 
           {/* Password Input */}
           <div className="relative">
-            <div className={`absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none transition-colors ${
-              isFocused.password ? 'text-cyan-400' : 'text-gray-500'
-            }`}>
+            <div className={`absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none transition-colors ${isFocused.password ? 'text-cyan-400' : 'text-gray-500'
+              }`}>
               <FaLock />
             </div>
             <input
@@ -255,9 +251,8 @@ const Login = () => {
           <button
             type="submit"
             disabled={isLoading}
-            className={`w-full bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 text-white py-3 rounded-lg font-medium transition-all duration-300 transform hover:scale-[1.02] shadow-lg shadow-cyan-500/20 relative overflow-hidden group ${
-              isLoading ? 'opacity-70 cursor-not-allowed' : ''
-            }`}
+            className={`w-full bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 text-white py-3 rounded-lg font-medium transition-all duration-300 transform hover:scale-[1.02] shadow-lg shadow-cyan-500/20 relative overflow-hidden group ${isLoading ? 'opacity-70 cursor-not-allowed' : ''
+              }`}
           >
             <span className="relative z-10 flex items-center justify-center gap-2">
               {isLoading ? (
@@ -301,14 +296,14 @@ const Login = () => {
         </form>
 
         <p className="text-center text-sm text-gray-400 mt-8">
-        Don't have an account?{' '}
-        <button
-         onClick={() => navigate('/signup')}
-          className="text-cyan-400 hover:underline font-medium transition-colors"
-          disabled={isLoading}
-            >
-             Sign up now
-           </button>
+          Don't have an account?{' '}
+          <button
+            onClick={() => navigate('/signup')}
+            className="text-cyan-400 hover:underline font-medium transition-colors"
+            disabled={isLoading}
+          >
+            Sign up now
+          </button>
         </p>
       </div>
     </div>

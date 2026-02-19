@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaArrowLeft, FaTrophy, FaStar, FaFire, FaLightbulb, FaCheckCircle, FaTimesCircle, FaRocket, FaArrowRight } from "react-icons/fa";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "https://quizshaala.onrender.com";
+import { api } from '../services/api';
 
 const questions = [
   {
@@ -84,26 +84,26 @@ const QuantitativeAptitude = () => {
 
   const handleOptionClick = (option) => {
     if (showFeedback) return;
-    
+
     setSelectedOption(option);
     const correct = option === questions[currentQuestion].answer;
     setIsCorrect(correct);
     setShowFeedback(true);
-    
+
     if (correct) {
       setScore(score + 1);
-      setAnsweredQuestions([...answeredQuestions, { 
+      setAnsweredQuestions([...answeredQuestions, {
         question: questions[currentQuestion].question,
-        correct: true 
+        correct: true
       }]);
     } else {
-      setAnsweredQuestions([...answeredQuestions, { 
+      setAnsweredQuestions([...answeredQuestions, {
         question: questions[currentQuestion].question,
         correct: false,
-        correctAnswer: questions[currentQuestion].answer 
+        correctAnswer: questions[currentQuestion].answer
       }]);
     }
-    
+
     createParticles(correct);
   };
 
@@ -167,7 +167,7 @@ const QuantitativeAptitude = () => {
         <span className="text-sm text-cyan-400">{currentQuestion + 1}/{questions.length}</span>
       </div>
       <div className="w-full bg-gray-700/50 rounded-full h-3 backdrop-blur-sm border border-white/10">
-        <div 
+        <div
           className="bg-gradient-to-r from-cyan-500 to-purple-600 h-3 rounded-full transition-all duration-500 ease-out relative overflow-hidden"
           style={{ width: `${((currentQuestion + 1) / questions.length) * 100}%` }}
         >
@@ -177,41 +177,29 @@ const QuantitativeAptitude = () => {
     </div>
   );
 
-useEffect(() => {
-  if (currentQuestion === questions.length) {
-    const saveHistory = async () => {
-      try {
-        const response = await fetch(`${API_BASE_URL}/history`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-          },
-          body: JSON.stringify({
-            quizTitle: "Quantitative Aptitude",
+  useEffect(() => {
+    if (currentQuestion === questions.length) {
+      const saveHistory = async () => {
+        try {
+          await api.post('/history', {
+            topic: "Quantitative Aptitude",
             score,
             totalQuestions: questions.length,
-            dateTaken: new Date(),
-          }),
-        });
+          });
 
-        if (response.ok) {
           console.log("✅ Quantitative Aptitude history saved!");
           // 👉 auto-refresh History.jsx
           window.dispatchEvent(new Event("historyShouldUpdate"));
-        } else {
-          console.error("❌ Failed to save quantitative history:", response.status);
+        } catch (err) {
+          console.error("❌ Error saving quantitative history:", err);
         }
-      } catch (err) {
-        console.error("❌ Error saving quantitative history:", err);
-      }
-    };
+      };
 
-    saveHistory();
-  }
-}, [currentQuestion, score]);
+      saveHistory();
+    }
+  }, [currentQuestion, score]);
 
-if (currentQuestion >= questions.length) {
+  if (currentQuestion >= questions.length) {
 
     return (
       <div className="min-h-screen relative overflow-hidden">
@@ -229,11 +217,11 @@ if (currentQuestion >= questions.length) {
               <div className="text-8xl mb-8 animate-bounce">
                 {getScoreEmoji()}
               </div>
-              
+
               <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-cyan-300 to-purple-400 bg-clip-text text-transparent">
                 Quantitative Test Completed! ✨
               </h1>
-              
+
               <div className="mb-8">
                 <div className="text-6xl font-bold text-white mb-2">{score}/{questions.length}</div>
                 <div className="text-2xl text-gray-300 mb-4">
@@ -260,7 +248,7 @@ if (currentQuestion >= questions.length) {
               </div>
 
               <div className="space-y-4">
-                <button 
+                <button
                   onClick={() => {
                     setCurrentQuestion(0);
                     setScore(0);
@@ -274,7 +262,7 @@ if (currentQuestion >= questions.length) {
                 >
                   <FaRocket className="inline mr-2" /> Try Again
                 </button>
-                <button 
+                <button
                   onClick={() => navigate('/Front')}
                   className="w-full px-8 py-4 bg-white/10 backdrop-blur-md hover:bg-white/20 text-white rounded-full text-lg font-semibold transition-all duration-300 border border-white/20 hover:border-white/40"
                 >
@@ -313,14 +301,14 @@ if (currentQuestion >= questions.length) {
       <div className="relative z-10 min-h-screen p-6">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
-          <button 
+          <button
             onClick={() => navigate('/')}
             className="group flex items-center gap-3 px-6 py-3 bg-white/10 backdrop-blur-md hover:bg-white/20 text-white rounded-full transition-all duration-300 border border-white/20 hover:border-white/40 hover:scale-105"
           >
             <FaArrowLeft className="group-hover:-translate-x-1 transition-transform" />
             Back to Home
           </button>
-          
+
           <div className="flex items-center gap-4">
             <div className="bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/20">
               <span className="text-cyan-400 font-semibold">Score: {score}</span>
@@ -362,7 +350,7 @@ if (currentQuestion >= questions.length) {
             <div className="space-y-4">
               {questions[currentQuestion].options.map((option, index) => {
                 let buttonStyle = "w-full text-left px-6 py-4 rounded-xl border transition-all duration-300 transform hover:scale-[1.02] ";
-                
+
                 if (showFeedback) {
                   if (option === questions[currentQuestion].answer) {
                     buttonStyle += 'bg-gradient-to-r from-green-500/20 to-emerald-600/20 border-green-500/50 text-green-300 shadow-green-500/20 shadow-lg';
@@ -401,11 +389,10 @@ if (currentQuestion >= questions.length) {
 
             {/* Feedback */}
             {showFeedback && (
-              <div className={`mt-8 p-6 rounded-xl backdrop-blur-md border transition-all duration-500 ${
-                isCorrect 
-                  ? 'bg-green-500/10 border-green-500/30 text-green-300' 
+              <div className={`mt-8 p-6 rounded-xl backdrop-blur-md border transition-all duration-500 ${isCorrect
+                  ? 'bg-green-500/10 border-green-500/30 text-green-300'
                   : 'bg-red-500/10 border-red-500/30 text-red-300'
-              }`}>
+                }`}>
                 <div className="flex items-center gap-3 mb-2">
                   {isCorrect ? (
                     <>
@@ -420,8 +407,8 @@ if (currentQuestion >= questions.length) {
                   )}
                 </div>
                 <p className="text-lg">
-                  {isCorrect 
-                    ? 'Great job! You earned a point.' 
+                  {isCorrect
+                    ? 'Great job! You earned a point.'
                     : `The correct answer is: ${questions[currentQuestion].answer}`
                   }
                 </p>

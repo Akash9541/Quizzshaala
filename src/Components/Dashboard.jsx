@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaUser, FaSignOutAlt, FaTrophy, FaBookOpen, FaChartLine, FaPlay, FaHistory, FaAward, FaRocket, FaBrain, FaCode, FaCalculator, FaComments } from 'react-icons/fa';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "https://quizshaala.onrender.com";
+import { api } from '../services/api';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -24,12 +24,12 @@ const Dashboard = () => {
     loadUserData();
     loadUserStats();
     loadRecentQuizzes();
-    
+
     // Mouse tracking for background effect
     const handleMouseMove = (e) => {
       setMousePosition({ x: e.clientX, y: e.clientY });
     };
-    
+
     window.addEventListener('mousemove', handleMouseMove);
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
@@ -43,16 +43,12 @@ const Dashboard = () => {
 
       const accessToken = localStorage.getItem('accessToken');
       if (accessToken) {
-        const response = await fetch(`${API_BASE_URL}/profile`, {
-          headers: {
-            'Authorization': `Bearer ${accessToken}`
-          }
-        });
-
-        if (response.ok) {
-          const data = await response.json();
+        try {
+          const data = await api.get('/profile', accessToken);
           setUser(data.user);
           localStorage.setItem('user', JSON.stringify(data.user));
+        } catch (err) {
+          console.error('Failed to fetch profile', err);
         }
       }
     } catch (error) {
@@ -66,16 +62,8 @@ const Dashboard = () => {
     try {
       const accessToken = localStorage.getItem('accessToken');
       if (accessToken) {
-        const response = await fetch(`${API_BASE_URL}/stats`, {
-          headers: {
-            'Authorization': `Bearer ${accessToken}`
-          }
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          setStats(data);
-        }
+        const data = await api.get('/stats', accessToken);
+        setStats(data);
       }
     } catch (error) {
       console.error('Error loading stats:', error);
@@ -86,16 +74,8 @@ const Dashboard = () => {
     try {
       const accessToken = localStorage.getItem('accessToken');
       if (accessToken) {
-        const response = await fetch(`${API_BASE_URL}/recent-quizzes`, {
-          headers: {
-            'Authorization': `Bearer ${accessToken}`
-          }
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          setRecentQuizzes(data.quizzes || []);
-        }
+        const data = await api.get('/recent-quizzes', accessToken);
+        setRecentQuizzes(data.quizzes || []);
       }
     } catch (error) {
       console.error('Error loading recent quizzes:', error);
@@ -105,14 +85,9 @@ const Dashboard = () => {
   const handleLogout = async () => {
     try {
       const accessToken = localStorage.getItem('accessToken');
-      
+
       if (accessToken) {
-        await fetch(`${API_BASE_URL}/logout`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${accessToken}`
-          }
-        });
+        await api.post('/logout', {}, accessToken);
       }
     } catch (error) {
       console.error('Logout error:', error);
@@ -167,7 +142,7 @@ const Dashboard = () => {
         }
       ]
     };
-    
+
     setCurrentQuiz(mockQuiz);
     setQuizAnswers(new Array(mockQuiz.questions.length).fill(null));
     setShowQuizModal(true);
@@ -187,9 +162,9 @@ const Dashboard = () => {
         score += 1;
       }
     });
-    
+
     setQuizScore(score);
-    
+
     try {
       // Save quiz results to backend
       const results = {
@@ -197,29 +172,18 @@ const Dashboard = () => {
         score: score,
         totalQuestions: currentQuiz.questions.length
       };
-      
+
       const accessToken = localStorage.getItem('accessToken');
-      const response = await fetch(`${API_BASE_URL}/history`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify(results),
-      });
-      
-      if (response.ok) {
-        // Notify the history page to refresh
-        
-        // Refresh dashboard stats
-        loadUserStats();
-        loadRecentQuizzes();
-      } else {
-        console.error("Failed to save quiz results");
-      }
+      await api.post('/history', results, accessToken);
+
+      // Refresh dashboard stats
+      loadUserStats();
+      loadRecentQuizzes();
+
     } catch (error) {
       console.error("Error saving quiz results:", error);
     }
+
   };
 
   const closeQuizModal = () => {
@@ -240,7 +204,7 @@ const Dashboard = () => {
         <div className="absolute inset-0 bg-gradient-to-tr from-blue-900/10 via-transparent to-purple-900/10" />
         <div className="absolute inset-0 bg-gradient-to-bl from-indigo-900/5 via-transparent to-cyan-900/5" />
       </div>
-      
+
       <div
         className="fixed w-96 h-96 pointer-events-none z-0 transition-all duration-700 ease-out opacity-30"
         style={{
@@ -250,7 +214,7 @@ const Dashboard = () => {
           filter: 'blur(60px)'
         }}
       />
-      
+
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         {[...Array(8)].map((_, i) => (
           <div
@@ -282,7 +246,7 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen relative overflow-hidden">
       <BackgroundEffect />
-      
+
       <div className="relative z-10 text-white">
         {/* Header */}
         <header className="fixed top-0 w-full backdrop-blur-xl bg-slate-900/90 border-b border-slate-700/50 shadow-2xl z-50">
@@ -297,7 +261,7 @@ const Dashboard = () => {
                 </span>
               </div>
             </div>
-            
+
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2 text-slate-200">
                 <FaUser className="text-sm" />
@@ -400,7 +364,7 @@ const Dashboard = () => {
               <FaHistory className="mr-2 text-purple-400" />
               Recent Quizzes
             </h3>
-            
+
             {recentQuizzes.length > 0 ? (
               <div className="space-y-4">
                 {recentQuizzes.map((quiz, index) => (
@@ -434,7 +398,7 @@ const Dashboard = () => {
             <div className="p-6 border-b border-slate-700/50">
               <div className="flex justify-between items-center">
                 <h3 className="text-xl font-bold text-white">{currentQuiz.title}</h3>
-                <button 
+                <button
                   onClick={closeQuizModal}
                   className="text-slate-400 hover:text-white"
                 >
@@ -442,7 +406,7 @@ const Dashboard = () => {
                 </button>
               </div>
             </div>
-            
+
             <div className="p-6">
               {quizScore > 0 ? (
                 // Quiz Results
@@ -471,21 +435,19 @@ const Dashboard = () => {
                       </h4>
                       <div className="space-y-3">
                         {question.options.map((option, oIndex) => (
-                          <div 
+                          <div
                             key={oIndex}
-                            className={`p-4 rounded-lg cursor-pointer transition-all ${
-                              quizAnswers[qIndex] === oIndex
-                                ? "bg-blue-600/30 border border-blue-500/50"
-                                : "bg-slate-700/30 hover:bg-slate-700/50 border border-slate-700/50"
-                            }`}
+                            className={`p-4 rounded-lg cursor-pointer transition-all ${quizAnswers[qIndex] === oIndex
+                              ? "bg-blue-600/30 border border-blue-500/50"
+                              : "bg-slate-700/30 hover:bg-slate-700/50 border border-slate-700/50"
+                              }`}
                             onClick={() => handleAnswerSelect(qIndex, oIndex)}
                           >
                             <div className="flex items-center">
-                              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center mr-3 ${
-                                quizAnswers[qIndex] === oIndex
-                                  ? "border-blue-400 bg-blue-400/20"
-                                  : "border-slate-500"
-                              }`}>
+                              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center mr-3 ${quizAnswers[qIndex] === oIndex
+                                ? "border-blue-400 bg-blue-400/20"
+                                : "border-slate-500"
+                                }`}>
                                 {quizAnswers[qIndex] === oIndex && (
                                   <div className="w-2 h-2 rounded-full bg-blue-400"></div>
                                 )}
@@ -497,15 +459,14 @@ const Dashboard = () => {
                       </div>
                     </div>
                   ))}
-                  
+
                   <button
                     onClick={submitQuiz}
                     disabled={quizAnswers.includes(null)}
-                    className={`w-full py-3 rounded-lg font-medium mt-6 ${
-                      quizAnswers.includes(null)
-                        ? "bg-slate-700 text-slate-400 cursor-not-allowed"
-                        : "bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white"
-                    }`}
+                    className={`w-full py-3 rounded-lg font-medium mt-6 ${quizAnswers.includes(null)
+                      ? "bg-slate-700 text-slate-400 cursor-not-allowed"
+                      : "bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white"
+                      }`}
                   >
                     Submit Quiz
                   </button>

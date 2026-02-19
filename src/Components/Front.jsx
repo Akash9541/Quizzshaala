@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaLinkedin, FaGithub, FaTwitter, FaArrowRight, FaArrowLeft, FaRocket, FaBrain, FaCode, FaCalculator, FaComments, FaTrophy, FaBars, FaTimes, FaPlay, FaUsers, FaChartLine, FaStar, FaAward, FaGraduationCap, FaLaptopCode, FaClipboardCheck, FaBookOpen, FaFileAlt, FaUserCircle } from 'react-icons/fa';
-const API_BASE_URL = import.meta.env.VITE_API_URL || "https://quizshaala.onrender.com";
+import { api } from '../services/api';
 
 const Front = () => {
   const navigate = useNavigate();
@@ -17,78 +17,71 @@ const Front = () => {
   const scrollRef = useRef(null);
   const throttleTimeout = useRef(null);
 
-useEffect(() => {
-  const fetchHistory = async () => {
-    try {
-      const res = await fetch(`${API_BASE_URL}/history`, {
-      headers: {
-    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        }
-      });
+  useEffect(() => {
+    const fetchHistory = async () => {
+      try {
+        await api.get('/history');
+      } catch (err) {
+        console.error(err);
+      }
+    };
 
-      await res.json();
-      // setQuizHistory(data); // e.g., state variable
-    } catch (err) {
-      console.error(err);
-    }
-  };
+    const handleHistoryUpdate = () => fetchHistory();
+    window.addEventListener("historyShouldUpdate", handleHistoryUpdate);
 
-  const handleHistoryUpdate = () => fetchHistory();
-  window.addEventListener("historyShouldUpdate", handleHistoryUpdate);
+    fetchHistory();
 
-  fetchHistory();
+    return () => {
+      window.removeEventListener("historyShouldUpdate", handleHistoryUpdate);
+    };
+  }, []);
 
-  return () => {
-    window.removeEventListener("historyShouldUpdate", handleHistoryUpdate);
-  };
-}, []);
-  
 
   const topics = [
-    { 
-      label: "Logical Reasoning", 
-      path: "/logical", 
-      icon: <FaBrain />, 
+    {
+      label: "Logical Reasoning",
+      path: "/logical",
+      icon: <FaBrain />,
       gradient: "from-indigo-600 to-purple-700",
       description: "Enhance critical thinking and problem-solving skills",
       problems: "150+ Questions"
     },
-    { 
-      label: "Coding & Problem-Solving", 
-      path: "/coding", 
-      icon: <FaCode />, 
+    {
+      label: "Coding & Problem-Solving",
+      path: "/coding",
+      icon: <FaCode />,
       gradient: "from-emerald-600 to-teal-700",
       description: "Master DSA and programming fundamentals",
       problems: "300+ Problems"
     },
-    { 
-      label: "Quantitative Aptitude", 
-      path: "/aptitude", 
-      icon: <FaCalculator />, 
+    {
+      label: "Quantitative Aptitude",
+      path: "/aptitude",
+      icon: <FaCalculator />,
       gradient: "from-orange-600 to-red-700",
       description: "Excel in mathematical and analytical reasoning",
       problems: "200+ Questions"
     },
-    { 
-      label: "CS Fundamentals", 
-      path: "/csfundamentals", 
-      icon: <FaRocket />, 
+    {
+      label: "CS Fundamentals",
+      path: "/csfundamentals",
+      icon: <FaRocket />,
       gradient: "from-cyan-600 to-blue-700",
       description: "Build strong computer science foundations",
       problems: "180+ Topics"
     },
-    { 
-      label: "Verbal & Communication", 
-      path: "/verbal", 
-      icon: <FaComments />, 
+    {
+      label: "Verbal & Communication",
+      path: "/verbal",
+      icon: <FaComments />,
       gradient: "from-amber-600 to-orange-700",
       description: "Improve communication and language skills",
       problems: "120+ Exercises"
     },
-    { 
-      label: "Mock Tests & Assessments", 
-      path: "/mock", 
-      icon: <FaTrophy />, 
+    {
+      label: "Mock Tests & Assessments",
+      path: "/mock",
+      icon: <FaTrophy />,
       gradient: "from-violet-600 to-purple-700",
       description: "Practice with real company questions",
       problems: "50+ Tests"
@@ -100,7 +93,7 @@ useEffect(() => {
     { name: 'About', href: '#about' },
     { name: 'Features', href: '#features' },
     { name: 'Services', href: '#services' },
-    { name: 'Placement Records', href: '#placement' }, 
+    { name: 'Placement Records', href: '#placement' },
     { name: 'Contact', href: '#contact' }
   ];
 
@@ -159,9 +152,9 @@ useEffect(() => {
   const scroll = (direction) => {
     if (scrollRef.current) {
       const scrollAmount = 350;
-      scrollRef.current.scrollBy({ 
-        left: direction === 'left' ? -scrollAmount : scrollAmount, 
-        behavior: 'smooth' 
+      scrollRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
       });
     }
   };
@@ -192,12 +185,7 @@ useEffect(() => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch('/api/contact', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      });
-      const data = await res.json();
+      const data = await api.post('/contact', formData);
       alert(data.message);
       setFormData({ name: '', email: '', message: '' });
     } catch (err) {
@@ -209,7 +197,7 @@ useEffect(() => {
   // Enhanced scroll and mouse tracking with throttling
   useEffect(() => {
     const throttleDelay = 100; // ms
-    
+
     const handleMouseMove = (e) => {
       if (!throttleTimeout.current) {
         throttleTimeout.current = setTimeout(() => {
@@ -220,23 +208,23 @@ useEffect(() => {
     };
 
     const handleScroll = () => {
-  setScrolled(window.scrollY > 50);
+      setScrolled(window.scrollY > 50);
 
-  const elements = document.querySelectorAll("[data-animate]");
-  elements.forEach((el) => {
-    const rect = el.getBoundingClientRect();
-    const isVisibleNow = rect.top < window.innerHeight * 0.8;
-    const id = el.getAttribute("data-animate");
-    if (isVisibleNow) {
-      setIsVisible((prev) => ({ ...prev, [id]: true }));
-    }
-  });
-};
+      const elements = document.querySelectorAll("[data-animate]");
+      elements.forEach((el) => {
+        const rect = el.getBoundingClientRect();
+        const isVisibleNow = rect.top < window.innerHeight * 0.8;
+        const id = el.getAttribute("data-animate");
+        if (isVisibleNow) {
+          setIsVisible((prev) => ({ ...prev, [id]: true }));
+        }
+      });
+    };
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('scroll', handleScroll);
-    
+
     handleScroll();
-    
+
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('scroll', handleScroll);
@@ -253,7 +241,7 @@ useEffect(() => {
         <div className="absolute inset-0 bg-gradient-to-tr from-blue-900/10 via-transparent to-purple-900/10" />
         <div className="absolute inset-0 bg-gradient-to-bl from-indigo-900/5 via-transparent to-cyan-900/5" />
       </div>
-      
+
       <div
         className="fixed w-96 h-96 pointer-events-none z-0 transition-all duration-700 ease-out opacity-20"
         style={{
@@ -263,7 +251,7 @@ useEffect(() => {
           filter: 'blur(60px)'
         }}
       />
-      
+
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         {[...Array(3)].map((_, i) => (
           <div
@@ -352,13 +340,12 @@ useEffect(() => {
       <div className="relative z-10 text-white">
 
         {/* Professional Header */}
-        <header className={`fixed top-0 w-full transition-all duration-500 z-50 ${
-          scrolled 
-            ? 'backdrop-blur-xl bg-slate-900/90 border-b border-slate-700/50 shadow-2xl' 
+        <header className={`fixed top-0 w-full transition-all duration-500 z-50 ${scrolled
+            ? 'backdrop-blur-xl bg-slate-900/90 border-b border-slate-700/50 shadow-2xl'
             : 'backdrop-blur-md bg-slate-900/20 border-b border-slate-700/20'
-        }`}>
+          }`}>
           <div className="flex justify-between items-center px-6 lg:px-8 py-4 max-w-7xl mx-auto">
-            
+
             <div className="group cursor-pointer" onClick={() => navigate('/dashboard')}>
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center font-bold text-lg group-hover:scale-110 transition-transform duration-300">
@@ -388,15 +375,15 @@ useEffect(() => {
 
             <div className="flex items-center space-x-4">
               {/* Profile Icon Button */}
-              <button 
+              <button
                 className="p-2 bg-slate-800/50 hover:bg-slate-700/50 backdrop-blur-sm border border-slate-700 hover:border-slate-600 rounded-full transition-all duration-300 group"
                 onClick={() => navigate('/dashboard')}
                 aria-label="Go to Dashboard"
               >
                 <FaUserCircle className="w-6 h-6 text-slate-200 group-hover:text-white transition-colors duration-300" />
               </button>
-              
-              <button 
+
+              <button
                 className="lg:hidden p-2 hover:bg-slate-800/50 rounded-lg transition-colors duration-300"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               >
@@ -408,9 +395,8 @@ useEffect(() => {
             </div>
           </div>
 
-          <div className={`lg:hidden backdrop-blur-xl bg-slate-900/95 border-t border-slate-700/50 transition-all duration-300 overflow-hidden ${
-            mobileMenuOpen ? 'max-h-64 opacity-100' : 'max-h-0 opacity-0'
-          }`}>
+          <div className={`lg:hidden backdrop-blur-xl bg-slate-900/95 border-t border-slate-700/50 transition-all duration-300 overflow-hidden ${mobileMenuOpen ? 'max-h-64 opacity-100' : 'max-h-0 opacity-0'
+            }`}>
             <nav className="px-6 py-4">
               <ul className="space-y-3">
                 {navItems.map((item) => (
@@ -489,7 +475,7 @@ useEffect(() => {
         <section id="features" className="px-4 py-20 relative" data-animate="features">
           <div className="absolute inset-0 bg-gradient-to-r from-blue-900/5 to-purple-900/5 backdrop-blur-3xl" />
           <div className="relative max-w-7xl mx-auto">
-            
+
             <div className="text-center mb-16">
               <h2 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
                 Why Choose Quizshaala?
@@ -498,7 +484,7 @@ useEffect(() => {
                 Experience the future of learning with our cutting-edge features
               </p>
             </div>
-            
+
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
               {features.map((feature, index) => (
                 <div
@@ -507,7 +493,7 @@ useEffect(() => {
                   style={{ transitionDelay: `${index * 100}ms` }}
                 >
                   <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${feature.color} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
-                  
+
                   <div className="relative z-10">
                     <div className="mb-6 transform group-hover:scale-110 transition-transform duration-300">
                       {feature.icon}
@@ -522,15 +508,14 @@ useEffect(() => {
         </section>
 
         {/* Enhanced Topics Section */}
-        <section 
-          id="topics" 
+        <section
+          id="topics"
           data-animate="topics"
-          className={`relative bg-[#0f172a] py-24 overflow-hidden ${
-          isVisible.topics ? "is-visible" : ""
-          }`} >
+          className={`relative bg-[#0f172a] py-24 overflow-hidden ${isVisible.topics ? "is-visible" : ""
+            }`} >
 
           <div className="max-w-7xl mx-auto">
-            
+
             <div className="text-center mb-16">
               <h2 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
                 Explore Learning Paths
@@ -539,22 +524,22 @@ useEffect(() => {
                 Comprehensive preparation across all domains essential for placement success
               </p>
             </div>
-            
+
             <div className="flex justify-between items-center mb-8">
-              <button 
-                onClick={() => scroll('left')} 
+              <button
+                onClick={() => scroll('left')}
                 className="p-3 bg-slate-800/50 hover:bg-slate-700/50 backdrop-blur-sm border border-slate-700 hover:border-slate-600 rounded-lg transition-all duration-300 group"
               >
                 <FaArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform duration-300" />
               </button>
-              <button 
-                onClick={() => scroll('right')} 
+              <button
+                onClick={() => scroll('right')}
                 className="p-3 bg-slate-800/50 hover:bg-slate-700/50 backdrop-blur-sm border border-slate-700 hover:border-slate-600 rounded-lg transition-all duration-300 group"
               >
                 <FaArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
               </button>
             </div>
-            
+
             <div
               ref={scrollRef}
               className="flex overflow-x-auto space-x-6 pb-4 scrollbar-hide"
@@ -566,20 +551,19 @@ useEffect(() => {
               }}
             >
               {topics.map((topic, index) => (
-  <div 
-    key={index} 
-    className={`group min-w-[320px] cursor-pointer animate-on-scroll fade-in-left ${
-      isVisible.topics ? "is-visible" : ""
-    }`}
-    style={{ transitionDelay: `${index * 100}ms` }}
-    onClick={() => handleTopicClick(topic.path)}
-  >
+                <div
+                  key={index}
+                  className={`group min-w-[320px] cursor-pointer animate-on-scroll fade-in-left ${isVisible.topics ? "is-visible" : ""
+                    }`}
+                  style={{ transitionDelay: `${index * 100}ms` }}
+                  onClick={() => handleTopicClick(topic.path)}
+                >
 
                   <div className={`relative bg-gradient-to-br ${topic.gradient} p-8 rounded-2xl transition-all duration-500 hover:scale-105 shadow-xl hover:shadow-2xl border border-white/10 ${isVisible.topics ? 'is-visible' : ''}`}>
-                    
+
                     <div className="absolute inset-0 bg-black/20 rounded-2xl" />
                     <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl" />
-                    
+
                     <div className="relative z-10">
                       <div className="text-4xl mb-6 transform group-hover:scale-110 transition-transform duration-300">
                         {topic.icon}
@@ -609,7 +593,7 @@ useEffect(() => {
         <section className="px-4 py-20 relative" data-animate="testimonials">
           <div className="absolute inset-0 bg-gradient-to-r from-purple-900/5 to-blue-900/5 backdrop-blur-3xl" />
           <div className="relative max-w-6xl mx-auto">
-            
+
             <div className="text-center mb-16">
               <h2 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
                 Success Stories
@@ -618,7 +602,7 @@ useEffect(() => {
                 Hear from students who achieved their dream placements
               </p>
             </div>
-            
+
             <div className="grid md:grid-cols-3 gap-8">
               {testimonials.map((testimonial, index) => (
                 <div
@@ -627,7 +611,7 @@ useEffect(() => {
                   style={{ transitionDelay: `${index * 100}ms` }}
                 >
                   <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  
+
                   <div className="relative z-10">
                     <div className="flex items-center mb-4">
                       <div className="text-3xl mr-3">{testimonial.avatar}</div>
@@ -636,13 +620,13 @@ useEffect(() => {
                         <p className="text-sm text-slate-400">{testimonial.role}</p>
                       </div>
                     </div>
-                    
+
                     <div className="flex mb-4">
                       {[...Array(testimonial.rating)].map((_, i) => (
                         <FaStar key={i} className="text-yellow-400 text-sm" />
                       ))}
                     </div>
-                    
+
                     <p className="text-slate-300 leading-relaxed italic">
                       "{testimonial.content}"
                     </p>
@@ -657,18 +641,18 @@ useEffect(() => {
         <section id="about" className="px-4 py-20 relative" data-animate="about">
           <div className="absolute inset-0 bg-gradient-to-r from-blue-900/5 to-purple-900/5 backdrop-blur-3xl" />
           <div className="relative max-w-6xl mx-auto">
-            
+
             <div className="grid lg:grid-cols-2 gap-12 items-center">
               <div className={`animate-on-scroll fade-in-left ${isVisible.about ? 'is-visible' : ''}`}>
                 <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
                   About Quizshaala
                 </h2>
                 <p className="text-xl text-slate-300 leading-relaxed mb-8">
-                  We're revolutionizing placement preparation with AI-powered learning experiences. 
-                  Our platform combines cutting-edge technology with expertly curated content to 
+                  We're revolutionizing placement preparation with AI-powered learning experiences.
+                  Our platform combines cutting-edge technology with expertly curated content to
                   help students excel in their career journey.
                 </p>
-                
+
                 <div className="space-y-4">
                   {[
                     'AI-powered personalized learning paths',
@@ -685,7 +669,7 @@ useEffect(() => {
                   ))}
                 </div>
               </div>
-              
+
               <div className={`bg-slate-800/30 backdrop-blur-sm rounded-2xl p-8 border border-slate-700/50 animate-on-scroll fade-in-right ${isVisible.about ? 'is-visible' : ''}`}>
                 <div className="grid grid-cols-2 gap-6">
                   {[
@@ -709,36 +693,36 @@ useEffect(() => {
         {/* Services Section */}
         <section id="services" className="px-4 py-20" data-animate="services">
           <div className="max-w-6xl mx-auto text-center">
-            
+
             <h2 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
               Our Services
             </h2>
             <p className="text-xl text-slate-300 mb-16 max-w-2xl mx-auto">
               Everything you need to excel in your placement journey
             </p>
-            
+
             <div className="grid md:grid-cols-2 lg:grid-cols-2 gap-8">
               {[
-                { 
-                  name: "Motivation", 
-                  icon: "💡", 
-                  description: "Daily quotes and success stories to keep you inspired.", 
+                {
+                  name: "Motivation",
+                  icon: "💡",
+                  description: "Daily quotes and success stories to keep you inspired.",
                   path: "/Motivation"
                 },
-                { 
-                  name: "Performance Analytics", 
-                  icon: "📊", 
+                {
+                  name: "Performance Analytics",
+                  icon: "📊",
                   description: "Detailed progress tracking with actionable insights",
                   path: "/Dashboard"
                 },
-                { 
-                  name: "Company Prep", 
-                  icon: "🏢", 
+                {
+                  name: "Company Prep",
+                  icon: "🏢",
                   description: "Company-specific preparation with latest patterns",
                   path: "/Company"
                 },
-                { 
-                  name: "Resume Building", 
+                {
+                  name: "Resume Building",
                   icon: "📄",
                   description: "Create a simple and professional resume.",
                   path: "/Resume"
@@ -746,7 +730,7 @@ useEffect(() => {
               ].map((service, index) => (
                 <div
                   key={index}
-                  onClick={() => navigate (service.path)}
+                  onClick={() => navigate(service.path)}
                   className={`group relative bg-slate-800/30 backdrop-blur-sm p-8 rounded-2xl border border-slate-700/50 hover:border-slate-600/50 transition-all duration-300 hover:scale-105 cursor-pointer animate-on-scroll fade-in-up ${isVisible.services ? 'is-visible' : ''}`}
                   style={{ transitionDelay: `${index * 100}ms` }}
                 >
@@ -755,7 +739,7 @@ useEffect(() => {
                   </div>
                   <h3 className="text-xl font-semibold text-white mb-3">{service.name}</h3>
                   <p className="text-slate-300 text-sm leading-relaxed">{service.description}</p>
-                  
+
                   <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 </div>
               ))}
@@ -774,27 +758,27 @@ useEffect(() => {
                 Celebrating our students' success stories and achievements
               </p>
             </div>
-            
+
             <div className="grid md:grid-cols-3 gap-8">
               {[
-                { 
-                  year: "2023", 
-                  placements: "1200+", 
-                  companies: "50+", 
+                {
+                  year: "2023",
+                  placements: "1200+",
+                  companies: "50+",
                   highestPackage: "₹42 LPA",
                   description: "Exceptional year with record-breaking placements"
                 },
-                { 
-                  year: "2022", 
-                  placements: "950+", 
-                  companies: "45+", 
+                {
+                  year: "2022",
+                  placements: "950+",
+                  companies: "45+",
                   highestPackage: "₹38 LPA",
                   description: "Consistent growth in placements and packages"
                 },
-                { 
-                  year: "2021", 
-                  placements: "800+", 
-                  companies: "40+", 
+                {
+                  year: "2021",
+                  placements: "800+",
+                  companies: "40+",
                   highestPackage: "₹35 LPA",
                   description: "Strong recovery and placement performance"
                 }
@@ -806,7 +790,7 @@ useEffect(() => {
                   onClick={() => navigate('/Placement')}
                 >
                   <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  
+
                   <div className="relative z-10 text-center">
                     <h3 className="text-3xl font-bold text-white mb-4">{record.year}</h3>
                     <div className="space-y-3">
@@ -824,9 +808,9 @@ useEffect(() => {
                 </div>
               ))}
             </div>
-            
+
             <div className="text-center mt-12">
-              <button 
+              <button
                 onClick={() => navigate('/Placements')}
                 className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg text-lg font-semibold transition-all duration-300 transform hover:scale-105 shadow-xl"
               >
@@ -839,48 +823,48 @@ useEffect(() => {
         {/* Contact Section */}
         <section id="contact" className="px-4 py-20" data-animate="contact">
           <div className="max-w-4xl mx-auto">
-            
+
             <div className="text-center mb-12">
               <h2 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
                 Get In Touch
               </h2>
               <p className="text-xl text-slate-300">Ready to start your learning journey?</p>
             </div>
-            
+
             <div className={`bg-slate-800/30 backdrop-blur-sm rounded-2xl p-8 md:p-12 border border-slate-700/50 animate-on-scroll fade-in-up ${isVisible.contact ? 'is-visible' : ''}`}>
               <form className="space-y-6" onSubmit={handleSubmit}>
                 <div className="grid md:grid-cols-2 gap-6">
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     name="name"
                     value={formData.name}
                     onChange={handleInputChange}
-                    placeholder="Your Name" 
+                    placeholder="Your Name"
                     className="w-full px-4 py-3 bg-slate-800/50 backdrop-blur-sm text-white border border-slate-700 focus:border-blue-500 focus:outline-none transition-colors rounded-lg placeholder-slate-400"
                     required
                   />
-                  <input 
-                    type="email" 
+                  <input
+                    type="email"
                     name="email"
                     value={formData.email}
                     onChange={handleInputChange}
-                    placeholder="Your Email" 
+                    placeholder="Your Email"
                     className="w-full px-4 py-3 bg-slate-800/50 backdrop-blur-sm text-white border border-slate-700 focus:border-blue-500 focus:outline-none transition-colors rounded-lg placeholder-slate-400"
                     required
                   />
                 </div>
-                <textarea 
-                  rows="5" 
+                <textarea
+                  rows="5"
                   name="message"
                   value={formData.message}
                   onChange={handleInputChange}
-                  placeholder="Your Message" 
+                  placeholder="Your Message"
                   className="w-full px-4 py-3 bg-slate-800/50 backdrop-blur-sm text-white border border-slate-700 focus:border-blue-500 focus:outline-none transition-colors rounded-lg placeholder-slate-400 resize-none"
                   required
                 />
                 <div className="text-center">
-                  <button 
-                    type="submit" 
+                  <button
+                    type="submit"
                     className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg text-lg font-semibold transition-all duration-300 transform hover:scale-105 shadow-xl"
                   >
                     Send Message
@@ -894,9 +878,9 @@ useEffect(() => {
         {/* Footer */}
         <footer className="bg-slate-900/50 backdrop-blur-sm py-16 border-t border-slate-700/50">
           <div className="max-w-6xl mx-auto px-4">
-            
+
             <div className="grid md:grid-cols-4 gap-8 text-center md:text-left mb-8">
-              
+
               <div className={`animate-on-scroll fade-in-left ${isVisible.contact ? 'is-visible' : ''}`}>
                 <div className="flex items-center justify-center md:justify-start space-x-3 mb-4">
                   <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center font-bold">
@@ -910,14 +894,14 @@ useEffect(() => {
                   Empowering students with AI-powered learning experiences for career success.
                 </p>
               </div>
-              
+
               <div className={`animate-on-scroll fade-in-up ${isVisible.contact ? 'is-visible' : ''}`}>
                 <h4 className="text-lg font-semibold text-white mb-4">Quick Links</h4>
                 <ul className="space-y-2 text-slate-300">
                   {navItems.map((link) => (
                     <li key={link.name}>
-                      <button 
-                        onClick={() => scrollToSection(link.href)} 
+                      <button
+                        onClick={() => scrollToSection(link.href)}
                         className="hover:text-blue-400 transition-colors duration-300"
                       >
                         {link.name}
@@ -926,7 +910,7 @@ useEffect(() => {
                   ))}
                 </ul>
               </div>
-              
+
               <div className={`animate-on-scroll fade-in-up ${isVisible.contact ? 'is-visible' : ''}`}>
                 <h4 className="text-lg font-semibold text-white mb-4">Resources</h4>
                 <ul className="space-y-2 text-slate-300">
@@ -939,26 +923,26 @@ useEffect(() => {
                   ))}
                 </ul>
               </div>
-              
+
               <div className={`animate-on-scroll fade-in-right ${isVisible.contact ? 'is-visible' : ''}`}>
                 <h4 className="text-lg font-semibold text-white mb-4">Connect</h4>
                 <div className="flex justify-center md:justify-start space-x-4 text-2xl">
-                  <a href="https://www.linkedin.com/in/akash-thakur-6354b9347" 
-                     className="text-slate-400 hover:text-blue-400 transition-colors duration-300 transform hover:scale-110">
+                  <a href="https://www.linkedin.com/in/akash-thakur-6354b9347"
+                    className="text-slate-400 hover:text-blue-400 transition-colors duration-300 transform hover:scale-110">
                     <FaLinkedin />
                   </a>
-                  <a href="https://github.com/Akash9541" 
-                     className="text-slate-400 hover:text-white transition-colors duration-300 transform hover:scale-110">
+                  <a href="https://github.com/Akash9541"
+                    className="text-slate-400 hover:text-white transition-colors duration-300 transform hover:scale-110">
                     <FaGithub />
                   </a>
-                  <a href="https://x.com/AkashThaku86906" 
-                     className="text-slate-400 hover:text-blue-400 transition-colors duration-300 transform hover:scale-110">
+                  <a href="https://x.com/AkashThaku86906"
+                    className="text-slate-400 hover:text-blue-400 transition-colors duration-300 transform hover:scale-110">
                     <FaTwitter />
                   </a>
                 </div>
               </div>
             </div>
-            
+
             <div className="text-center pt-8 border-t border-slate-700/50">
               <p className="text-slate-400">
                 © {new Date().getFullYear()} Quizshaala. Built with passion for student success.
@@ -968,7 +952,7 @@ useEffect(() => {
         </footer>
 
         {/* Floating Action Button */}
-        <button 
+        <button
           className="fixed bottom-8 right-8 group bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white p-4 rounded-full shadow-2xl z-50 transition-all duration-300 transform hover:scale-110"
           onClick={() => navigate('/dashboard')}
         >

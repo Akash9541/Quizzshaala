@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { FaTrophy, FaSync } from "react-icons/fa";
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || "https://quizshaala.onrender.com";
+import { api } from '../services/api';
 
 const History = () => {
   const [history, setHistory] = useState([]);
@@ -10,19 +9,7 @@ const History = () => {
 
   const fetchHistory = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/history`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
+      const data = await api.get('/history');
       setHistory(data);
     } catch (error) {
       console.error("Error fetching quiz history:", error);
@@ -43,7 +30,7 @@ const History = () => {
     };
 
     window.addEventListener('historyShouldUpdate', handleHistoryUpdate);
-    
+
     // Cleanup
     return () => {
       window.removeEventListener('historyShouldUpdate', handleHistoryUpdate);
@@ -104,8 +91,8 @@ const History = () => {
                 </div>
               </div>
               <div className="w-full bg-gray-700 rounded-full h-2.5 mt-3">
-                <div 
-                  className="bg-green-500 h-2.5 rounded-full" 
+                <div
+                  className="bg-green-500 h-2.5 rounded-full"
                   style={{ width: `${(quiz.score / quiz.totalQuestions) * 100}%` }}
                 ></div>
               </div>

@@ -19,6 +19,7 @@ const Resume = lazy(() => import("./Components/Resume"));
 const Placements = lazy(() => import("./Components/Placements"));
 const Motivation = lazy(() => import("./Components/Motivation"));
 const CompanyQuestionsPage = lazy(() => import("./Components/Company"));
+const OtpVerification = lazy(() => import("./Components/OtpVerification"));
 
 // ================================
 // Protected Route Component
@@ -104,6 +105,14 @@ export default function App() {
           }
         />
         <Route
+          path="/otp-verification"
+          element={
+            <PublicRoute>
+              <OtpVerification />
+            </PublicRoute>
+          }
+        />
+        <Route
           path="/"
           element={
             <PublicRoute>
@@ -124,6 +133,14 @@ export default function App() {
 
         <Route
           path="/front"
+          element={
+            <ProtectedRoute>
+              <Front />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/Front"
           element={
             <ProtectedRoute>
               <Front />
@@ -200,6 +217,22 @@ export default function App() {
         />
         <Route
           path="/placements"
+          element={
+            <ProtectedRoute>
+              <Placements />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/Placements"
+          element={
+            <ProtectedRoute>
+              <Placements />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/Placement"
           element={
             <ProtectedRoute>
               <Placements />

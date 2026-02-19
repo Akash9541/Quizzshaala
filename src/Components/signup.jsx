@@ -1,9 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaUser, FaLock, FaGoogle, FaGithub, FaEye, FaEyeSlash, FaEnvelope, FaUserPlus } from 'react-icons/fa';
-
-// Correct backend URL
-const API_BASE_URL = 'https://quizshaala.onrender.com/api';
+import { api } from '../services/api';
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -197,30 +195,11 @@ const Signup = () => {
     setSuccess('');
 
     try {
-      const response = await fetch(`${API_BASE_URL}/signup`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          name: formData.name.trim(),
-          email: formData.email.toLowerCase(),
-          password: formData.password
-        })
+      const data = await api.post('/signup', {
+        name: formData.name.trim(),
+        email: formData.email.toLowerCase(),
+        password: formData.password
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        // If backend says email exists but is unverified
-        if (response.status === 200 && data.message && data.message.includes('already exists but not verified')) {
-          setStep('verify');
-          setOtpSuccess(data.message);
-          return;
-        }
-        throw new Error(data.error || 'Signup failed');
-      }
 
       // For successful signup of a new user
       setStep('verify');
@@ -246,23 +225,10 @@ const Signup = () => {
     setSuccess('');
 
     try {
-      const response = await fetch(`${API_BASE_URL}/verify-otp`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          email: formData.email.toLowerCase(),
-          otp: otp
-        })
+      const data = await api.post('/verify-otp', {
+        email: formData.email.toLowerCase(),
+        otp: otp
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'OTP verification failed');
-      }
 
       localStorage.setItem('accessToken', data.accessToken);
       localStorage.setItem('refreshToken', data.refreshToken);
@@ -288,22 +254,9 @@ const Signup = () => {
     setSuccess('');
 
     try {
-      const response = await fetch(`${API_BASE_URL}/resend-otp`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          email: formData.email.toLowerCase()
-        })
+      await api.post('/resend-otp', {
+        email: formData.email.toLowerCase()
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to resend OTP');
-      }
       setOtpSuccess('');
       setOtpSuccess('New OTP sent to your email');
       

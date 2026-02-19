@@ -3,7 +3,7 @@ import { FaArrowLeft, FaCheckCircle, FaTimesCircle, FaTrophy, FaStar, FaRedo } f
 import { useNavigate } from 'react-router-dom';
 import confetti from 'canvas-confetti';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "https://quizshaala.onrender.com";
+import { api } from '../services/api';
 
 const questions = [
   {
@@ -55,106 +55,94 @@ const Logical = () => {
   const navigate = useNavigate();
   const feedbackRef = useRef(null);
 
-useEffect(() => {
-  if (showFeedback && feedbackRef.current) {
-    feedbackRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }
-}, [showFeedback]);
+  useEffect(() => {
+    if (showFeedback && feedbackRef.current) {
+      feedbackRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }, [showFeedback]);
 
-// Always call useEffect at the top level
-useEffect(() => {
-  if (currentQuestion === questions.length) {
-    const saveHistory = async () => {
-      try {
-        const response = await fetch(`${API_BASE_URL}/history`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-          },
-          body: JSON.stringify({
-            quizTitle: "Logical Reasoning Quiz",
+  // Always call useEffect at the top level
+  useEffect(() => {
+    if (currentQuestion === questions.length) {
+      const saveHistory = async () => {
+        try {
+          await api.post('/history', {
+            topic: "Logical Reasoning",
             score,
             totalQuestions: questions.length,
-            dateTaken: new Date(),
-          }),
-        });
+          });
 
-        if (response.ok) {
           console.log("✅ Logical quiz history saved!");
           // 🔥 Tell History.jsx to refresh
           window.dispatchEvent(new Event("historyShouldUpdate"));
-        } else {
-          console.error("❌ Failed to save logical quiz history:", response.status);
+        } catch (err) {
+          console.error("❌ Error saving logical quiz history:", err);
         }
-      } catch (err) {
-        console.error("❌ Error saving logical quiz history:", err);
-      }
-    };
+      };
 
-    saveHistory();
-  }
-}, [currentQuestion, score]);
+      saveHistory();
+    }
+  }, [currentQuestion, score]);
 
-const handleOptionClick = (option) => {
-  if (showFeedback) return;
-  
-  const isAnswerCorrect = option === questions[currentQuestion].correct;
-  setIsCorrect(isAnswerCorrect);
-  setSelectedOption(option);
-  setShowFeedback(true);
-  
-  if (isAnswerCorrect) {
-    setScore(score + 1);
-    const newStreak = streak + 1;
-    setStreak(newStreak);
-    if (newStreak > maxStreak) setMaxStreak(newStreak);
-  } else {
-    setStreak(0);
-  }
-  
-  setUserAnswers([...userAnswers, {
-    question: questions[currentQuestion].question,
-    selected: option,
-    correct: questions[currentQuestion].correct
-  }]);
-};
+  const handleOptionClick = (option) => {
+    if (showFeedback) return;
 
-const handleNext = () => {
-  setSelectedOption('');
-  setShowFeedback(false);
-  setIsCorrect(null);
-  setCurrentQuestion(currentQuestion + 1);
-};
+    const isAnswerCorrect = option === questions[currentQuestion].correct;
+    setIsCorrect(isAnswerCorrect);
+    setSelectedOption(option);
+    setShowFeedback(true);
 
-const getScorePercentage = () => Math.round((score / questions.length) * 100);
+    if (isAnswerCorrect) {
+      setScore(score + 1);
+      const newStreak = streak + 1;
+      setStreak(newStreak);
+      if (newStreak > maxStreak) setMaxStreak(newStreak);
+    } else {
+      setStreak(0);
+    }
 
-const triggerConfetti = () => {
-  confetti({
-    particleCount: 150,
-    spread: 70,
-    origin: { y: 0.6 }
-  });
-};
+    setUserAnswers([...userAnswers, {
+      question: questions[currentQuestion].question,
+      selected: option,
+      correct: questions[currentQuestion].correct
+    }]);
+  };
 
-if (currentQuestion >= questions.length) {
+  const handleNext = () => {
+    setSelectedOption('');
+    setShowFeedback(false);
+    setIsCorrect(null);
+    setCurrentQuestion(currentQuestion + 1);
+  };
+
+  const getScorePercentage = () => Math.round((score / questions.length) * 100);
+
+  const triggerConfetti = () => {
+    confetti({
+      particleCount: 150,
+      spread: 70,
+      origin: { y: 0.6 }
+    });
+  };
+
+  if (currentQuestion >= questions.length) {
 
     const percentage = getScorePercentage();
     if (percentage >= 80) {
       triggerConfetti();
     }
-    
+
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 text-white p-6">
         <div className="bg-slate-800/30 backdrop-blur-md rounded-3xl p-8 md:p-12 border border-slate-700/50 shadow-2xl max-w-2xl w-full text-center">
           <div className="text-6xl mb-4 animate-bounce">
             <FaTrophy className="text-yellow-400 mx-auto" />
           </div>
-          
+
           <h1 className="text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-cyan-300 to-purple-400 bg-clip-text text-transparent">
             Quiz Completed!
           </h1>
-          
+
           <div className="flex justify-center space-x-8 mb-6">
             <div className="text-center">
               <p className="text-2xl font-bold text-cyan-400">{score}/{questions.length}</p>
@@ -169,29 +157,28 @@ if (currentQuestion >= questions.length) {
               <p className="text-gray-300">Max Streak</p>
             </div>
           </div>
-          
+
           <div className="flex justify-center mb-6">
             {[...Array(5)].map((_, i) => (
-              <FaStar 
-                key={i} 
-                className={`text-2xl mx-1 ${
-                  i < Math.floor(percentage / 20) 
-                    ? "text-yellow-400" 
+              <FaStar
+                key={i}
+                className={`text-2xl mx-1 ${i < Math.floor(percentage / 20)
+                    ? "text-yellow-400"
                     : "text-gray-600"
-                }`} 
+                  }`}
               />
             ))}
           </div>
-          
+
           <div className="space-y-4">
-            <button 
-              onClick={() => navigate('/Front')} 
+            <button
+              onClick={() => navigate('/Front')}
               className="w-full max-w-xs mx-auto py-3 flex items-center justify-center gap-2 rounded-full bg-cyan-600 hover:bg-cyan-700 transition"
             >
               <FaArrowLeft /> Back to Home
             </button>
-            
-            <button 
+
+            <button
               onClick={() => {
                 setCurrentQuestion(0);
                 setScore(0);
@@ -201,7 +188,7 @@ if (currentQuestion >= questions.length) {
                 setShowFeedback(false);
                 setIsCorrect(null);
                 setUserAnswers([]);
-              }} 
+              }}
               className="w-full max-w-xs mx-auto py-3 flex items-center justify-center gap-2 rounded-full bg-purple-600 hover:bg-purple-700 transition"
             >
               <FaRedo /> Try Again
@@ -224,13 +211,13 @@ if (currentQuestion >= questions.length) {
 
       <div className="relative z-10 max-w-4xl mx-auto">
         <div className="flex justify-between items-center mb-6 md:mb-8">
-          <button 
-            onClick={() => navigate('/Front')} 
+          <button
+            onClick={() => navigate('/Front')}
             className="flex items-center gap-2 px-4 py-2 bg-slate-800/50 hover:bg-slate-700/50 backdrop-blur-sm rounded-full border border-slate-700 hover:border-slate-600 transition"
           >
             <FaArrowLeft /> Back
           </button>
-          
+
           <div className="flex items-center gap-4">
             {streak > 0 && (
               <div className="hidden md:flex items-center gap-1 text-yellow-400 animate-pulse">
@@ -243,8 +230,8 @@ if (currentQuestion >= questions.length) {
 
         {/* Progress bar */}
         <div className="w-full bg-gray-700 rounded-full h-2.5 mb-6">
-          <div 
-            className="bg-cyan-500 h-2.5 rounded-full transition-all duration-500 ease-in-out" 
+          <div
+            className="bg-cyan-500 h-2.5 rounded-full transition-all duration-500 ease-in-out"
             style={{ width: `${((currentQuestion + 1) / questions.length) * 100}%` }}
           ></div>
         </div>
@@ -254,11 +241,11 @@ if (currentQuestion >= questions.length) {
             <span className="text-cyan-400">Q{currentQuestion + 1}: </span>
             {questions[currentQuestion].question}
           </div>
-          
+
           <div className="space-y-3">
             {questions[currentQuestion].options.map((option, i) => {
               let className = "w-full text-left px-6 py-4 rounded-xl border transition-all duration-300 ";
-              
+
               if (showFeedback) {
                 if (option === questions[currentQuestion].correct) {
                   className += "bg-green-500/20 border-green-500 text-green-300";
@@ -270,12 +257,12 @@ if (currentQuestion >= questions.length) {
               } else {
                 className += "bg-white/10 border-white/20 hover:bg-white/20 text-white";
               }
-              
+
               return (
-                <button 
-                  key={i} 
+                <button
+                  key={i}
                   className={`${className} flex items-center`}
-                  onClick={() => handleOptionClick(option)} 
+                  onClick={() => handleOptionClick(option)}
                   disabled={showFeedback}
                 >
                   <span className="mr-4 font-bold opacity-80">{String.fromCharCode(65 + i)}.</span>
@@ -286,13 +273,12 @@ if (currentQuestion >= questions.length) {
           </div>
 
           {showFeedback && (
-            <div 
+            <div
               ref={feedbackRef}
-              className={`mt-6 p-4 rounded-xl ${
-                isCorrect 
-                  ? 'bg-green-500/10 text-green-300' 
+              className={`mt-6 p-4 rounded-xl ${isCorrect
+                  ? 'bg-green-500/10 text-green-300'
                   : 'bg-red-500/10 text-red-300'
-              }`}
+                }`}
             >
               <div className="flex items-center gap-2 mb-2">
                 {isCorrect ? (
@@ -304,18 +290,18 @@ if (currentQuestion >= questions.length) {
                   {isCorrect ? 'Correct! Great job!' : `Incorrect. The right answer is: ${questions[currentQuestion].correct}`}
                 </span>
               </div>
-              
+
               <div className="mt-3 text-sm opacity-90">
                 {questions[currentQuestion].explanation}
               </div>
-              
+
               <div className="mt-4 text-center">
                 <button
                   onClick={handleNext}
                   className="px-6 py-3 bg-cyan-500 hover:bg-cyan-600 rounded-full text-white font-semibold transition"
                 >
-                  {currentQuestion === questions.length - 1 
-                    ? 'Finish Quiz' 
+                  {currentQuestion === questions.length - 1
+                    ? 'Finish Quiz'
                     : 'Next Question →'}
                 </button>
               </div>
