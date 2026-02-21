@@ -125,7 +125,7 @@ const Login = () => {
         // Attempt to parse if it's a JSON string, though api.js usually returns object or throws error with message
         const parsed = JSON.parse(errorMessage);
         if (parsed && parsed.error) errorMessage = parsed.error;
-      } catch (e) {
+      } catch {
         // Not a JSON string, keep original message
       }
 

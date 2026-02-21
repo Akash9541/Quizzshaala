@@ -275,7 +275,7 @@ const Front = () => {
     <div className="min-h-screen relative overflow-hidden">
       <BackgroundEffect />
 
-      <style jsx>{`
+      <style>{`
         @keyframes float {
           0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 0.1; }
           50% { transform: translateY(-20px) rotate(180deg); opacity: 0.3; }

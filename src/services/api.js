@@ -33,12 +33,43 @@ const getHeaders = (token) => {
     return headers;
 };
 
+const clearAuthState = () => {
+    if (typeof window === 'undefined') return;
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('user');
+    sessionStorage.removeItem('accessToken');
+    sessionStorage.removeItem('refreshToken');
+};
+
+const redirectToLoginIfNeeded = () => {
+    if (typeof window === 'undefined') return;
+    const publicRoutes = new Set(['/login', '/signup', '/otp-verification', '/']);
+    if (!publicRoutes.has(window.location.pathname)) {
+        window.location.assign('/login');
+    }
+};
+
 const handleResponse = async (response) => {
     const text = await response.text();
-    const data = text ? JSON.parse(text) : {};
+    let data = {};
+    try {
+        data = text ? JSON.parse(text) : {};
+    } catch {
+        data = {};
+    }
 
     if (!response.ok) {
         const error = (data && data.error) || response.statusText;
+        const isAuthError =
+            response.status === 401 ||
+            (response.status === 403 && /invalid|expired token/i.test(String(error)));
+
+        if (isAuthError) {
+            clearAuthState();
+            redirectToLoginIfNeeded();
+        }
+
         throw new Error(error);
     }
     return data;

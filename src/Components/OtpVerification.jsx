@@ -28,7 +28,7 @@ const OtpVerification = () => {
         e.preventDefault();
         setIsLoading(true);
         try {
-            await api.post('/verify-otp', { email, otp });
+            await api.post('/verify-otp-code', { email, otp });
             toast.success('OTP verified successfully!');
             // Redirect or perform next action here
         } catch (error) {
